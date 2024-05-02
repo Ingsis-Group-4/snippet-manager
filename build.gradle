@@ -6,6 +6,7 @@ plugins {
 	id 'org.jetbrains.kotlin.jvm' version '1.9.23'
 	id 'org.jetbrains.kotlin.plugin.spring' version '1.9.23'
 	id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.23'
+	id 'jacoco'
 }
 
 java {
@@ -16,6 +17,7 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	ktlint
 }
 
 repositories {
@@ -30,6 +32,11 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	ktlint("com.pinterest.ktlint:ktlint-cli:1.2.1") {
+		attributes {
+			attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
+		}
+	}
 }
 
 tasks.withType(KotlinCompile) {
@@ -42,3 +49,32 @@ tasks.withType(KotlinCompile) {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.register("checkLint", JavaExec) {
+	group = "verification"
+	description = "Check Kotlin code style."
+	classpath = configurations.ktlint
+	mainClass = "com.pinterest.ktlint.Main"
+	args "src/**/*.kt", "**.kts", "!**/build/**"
+}
+
+tasks.named("check") {
+	dependsOn tasks.named("checkLint")
+}
+
+tasks.register("lint", JavaExec) {
+	group = "formatting"
+	description = "Fix Kotlin code style deviations."
+	classpath = configurations.ktlint
+	mainClass = "com.pinterest.ktlint.Main"
+	jvmArgs "--add-opens=java.base/java.lang=ALL-UNNAMED"
+	args "-F", "src/**/*.kt", "**.kts", "!**/build/**"
+}
+
+task installGitHooks(type: Copy) {
+	from new File(rootProject.rootDir, 'hooks/pre-commit')
+	into { new File(rootProject.rootDir, '.git/hooks') }
+}
+
+build.dependsOn installGitHooks
+
