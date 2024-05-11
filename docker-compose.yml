@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  snippet-manager:
+    container_name: "snippet-manager"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "49160:5000"
+    volumes:
+      - ./data:/app/data
+  s3-storage:
+    image: localstack/localstack:0.12.5
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+      - DEFAULT_REGION=eu-west-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    ports:
+      - '4566'
+    volumes:
+      # inicializaremos un bucket aquí
+      - './volumes/s3-storage/.init:/docker-entrypoint-initaws.d'
+      # no versionado, localstack nos generará aquí el .pem
+      # para nuestras claves de acceso fake
+      - './volumes/s3-storage/.localstack:/tmp/localstack'
