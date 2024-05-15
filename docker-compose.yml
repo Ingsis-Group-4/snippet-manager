@@ -10,19 +10,28 @@ services:
       - "49160:5000"
     volumes:
       - ./data:/app/data
-  s3-storage:
-    image: localstack/localstack:0.12.5
-    environment:
-      - SERVICES=s3
-      - DEBUG=1
-      - DEFAULT_REGION=eu-west-1
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
+
+  api:
+    container_name: "asset_service"
+    image: ghcr.io/austral-ingsis/snippet-asset-service:latest
     ports:
-      - '4566'
+      - "8080:8080"
+    environment:
+      AZURE_HOST: "http://azurite"
+
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: "azurite"
+    hostname: azurite
+    restart: always
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
     volumes:
-      # inicializaremos un bucket aquí
-      - './volumes/s3-storage/.init:/docker-entrypoint-initaws.d'
-      # no versionado, localstack nos generará aquí el .pem
-      # para nuestras claves de acceso fake
-      - './volumes/s3-storage/.localstack:/tmp/localstack'
+      - blob:/workspace
+
+volumes:
+  blob:
+    external: false
