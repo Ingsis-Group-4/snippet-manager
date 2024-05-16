@@ -11,10 +11,10 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
 import org.springframework.security.oauth2.core.OAuth2TokenValidator
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.jwt.JwtValidators
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders
 import org.springframework.security.web.server.SecurityWebFilterChain
 
@@ -27,19 +27,19 @@ class SecurityConfig(
     @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     val issuer: String,
 ) {
-
     @Bean
-    fun securityWebFilterChain(serverSecurity: ServerHttpSecurity): SecurityWebFilterChain = serverSecurity
-        .authorizeExchange {
-            it
-                .pathMatchers(GET, "/snippets").hasAuthority("SCOPE_read:snippets")
-                .pathMatchers(POST, "/snippets").hasAuthority("SCOPE_write:snippets")
-                .anyExchange().denyAll()
-        }
-        .oauth2ResourceServer { it.jwt(withDefaults()) }
-        .cors(withDefaults())
-        .csrf(ServerHttpSecurity.CsrfSpec::disable)
-        .build()
+    fun securityWebFilterChain(serverSecurity: ServerHttpSecurity): SecurityWebFilterChain =
+        serverSecurity
+            .authorizeExchange {
+                it
+                    .pathMatchers(GET, "/snippets").hasAuthority("SCOPE_read:snippets")
+                    .pathMatchers(POST, "/snippets").hasAuthority("SCOPE_write:snippets")
+                    .anyExchange().denyAll()
+            }
+            .oauth2ResourceServer { it.jwt(withDefaults()) }
+            .cors(withDefaults())
+            .csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .build()
 
     @Bean
     fun jwtDecoder(): ReactiveJwtDecoder {
@@ -53,5 +53,3 @@ class SecurityConfig(
         return jwtDecoder
     }
 }
-
-
