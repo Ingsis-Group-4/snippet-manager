@@ -1,0 +1,10 @@
+auth0:
+  audience: https://snippet-manager
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-rwvojcsa8mzfij2d.us.auth0.com/
+
