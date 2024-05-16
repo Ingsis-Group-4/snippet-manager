@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  snippet-manager:
+    container_name: "snippet-manager"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "49160:5000"
+    volumes:
+      - ./data:/app/data
+
+  api:
+    container_name: "asset_service"
+    image: ghcr.io/austral-ingsis/snippet-asset-service:latest
+    ports:
+      - "8080:8080"
+    environment:
+      AZURE_HOST: "http://azurite"
+
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: "azurite"
+    hostname: azurite
+    restart: always
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - blob:/workspace
+
+volumes:
+  blob:
+    external: false
