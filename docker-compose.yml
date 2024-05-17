@@ -10,6 +10,8 @@ services:
       - "49160:5000"
     volumes:
       - ./data:/app/data
+    depends_on:
+      - api
 
   api:
     container_name: "asset_service"
