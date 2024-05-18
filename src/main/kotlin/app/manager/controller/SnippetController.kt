@@ -1,4 +1,4 @@
-package app.controller
+package app.manager.controller
 
 import org.springframework.http.HttpStatus.OK
 import org.springframework.web.bind.annotation.GetMapping
