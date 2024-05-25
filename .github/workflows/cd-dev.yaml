@@ -34,3 +34,9 @@ jobs:
           tags: |
             ghcr.io/ingsis-group-4/snippet-manager-dev:${{ steps.short-sha.outputs.sha }}
             ghcr.io/ingsis-group-4/snippet-manager-dev:latest
+
+      - name: Deploy to dev
+        uses: Ingsis-Group-4/common-actions/.github/workflows/deploy.yml@main
+        with:
+          server_url: ${{ secrets.DEV_URL }}
+          container_name: snippet-manager
