@@ -40,3 +40,4 @@ jobs:
         with:
           server_url: ${{ secrets.DEV_URL }}
           container_name: snippet-manager
+          docker_compose_file: docker-compose.dev.yml
