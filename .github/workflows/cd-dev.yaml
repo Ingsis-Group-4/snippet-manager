@@ -35,6 +35,11 @@ jobs:
             ghcr.io/ingsis-group-4/snippet-manager-dev:${{ steps.short-sha.outputs.sha }}
             ghcr.io/ingsis-group-4/snippet-manager-dev:latest
 
+  deploy_to_dev:
+    name: Deploy to dev
+    runs-on: ubuntu-latest
+    needs: push_to_registry
+    steps:
       - name: Deploy to dev
         uses: Ingsis-Group-4/common-actions/.github/workflows/deploy.yml@main
         with:
