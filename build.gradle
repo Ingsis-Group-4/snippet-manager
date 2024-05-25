@@ -34,6 +34,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
 	ktlint("com.pinterest.ktlint:ktlint-cli:1.2.1") {
 		attributes {
