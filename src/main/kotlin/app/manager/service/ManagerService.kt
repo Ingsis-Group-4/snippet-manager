@@ -30,8 +30,6 @@ class ManagerService {
     fun createSnippet(input: CreateSnippetInput): String {
         val snippetKey = UUID.randomUUID().toString()
         val bucketURL = "$azuriteBucketUrlV1/$snippetKey"
-        println(bucketURL)
-
         val bucketResponseEntity = createSnippetInBucket(bucketURL, input.content)
 
         if (bucketResponseEntity.statusCode.is2xxSuccessful) {
@@ -75,7 +73,7 @@ class ManagerService {
             this.restTemplate.postForEntity(permissionsURL, HttpEntity(permissionBody, headers), Any::class.java)
 
         if (permissionResponseEntity.statusCode.is2xxSuccessful) {
-            return "Snippet created successfully"
+            return "Snippet created successfully. Snippet key: $snippetKey"
         } else {
             throw Exception("Failed to create permissions for snippet $snippetKey. Status code: ${permissionResponseEntity.statusCode}")
         }
