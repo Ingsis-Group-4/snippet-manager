@@ -36,6 +36,12 @@ jobs:
 #          tags: |
 #            ghcr.io/ingsis-group-4/snippet-manager-dev:${{ steps.short-sha.outputs.sha }}
 #            ghcr.io/ingsis-group-4/snippet-manager-dev:latest
+  dummy_job:
+      name: Dummy job
+      runs-on: ubuntu-latest
+      steps:
+        - name: Dummy step
+          run: echo "Dummy step"
 
   deploy_to_dev:
     name: Deploy to dev
