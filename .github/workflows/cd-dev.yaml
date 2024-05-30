@@ -43,5 +43,6 @@ jobs:
     with:
       container_name: snippet-manager
       docker_compose_file: docker-compose.dev.yml
+    secrets:
       server_url: ${{ secrets.DEV_URL }}
       ssh_key: ${{ secrets.SSH_PRIVATE_KEY }}
