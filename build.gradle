@@ -31,12 +31,13 @@ dependencies {
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'com.h2database:h2:2.2.224'
+	testImplementation 'org.springframework.security:spring-security-test'
 
 	ktlint("com.pinterest.ktlint:ktlint-cli:1.2.1") {
 		attributes {
@@ -52,7 +53,6 @@ dependencies {
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0"
 
-	testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.withType(KotlinCompile) {
