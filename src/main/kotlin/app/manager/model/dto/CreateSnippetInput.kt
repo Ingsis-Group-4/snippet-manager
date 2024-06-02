@@ -8,7 +8,5 @@ data class CreateSnippetInput(
     @NotBlank
     val content: String,
     @NotBlank
-    val userId: String,
-    @NotBlank
     val language: String,
 )
