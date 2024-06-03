@@ -31,7 +31,6 @@ dependencies {
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
@@ -39,11 +38,25 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation:3.2.5'
 	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.projectreactor:reactor-test'
+	testImplementation 'com.h2database:h2:2.2.224'
+	testImplementation 'org.springframework.security:spring-security-test'
+
 	ktlint("com.pinterest.ktlint:ktlint-cli:1.2.1") {
 		attributes {
 			attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
 		}
 	}
+
+	implementation 'org.springframework.boot:spring-boot-starter-validation:3.2.5'
+	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+
+	implementation 'org.postgresql:postgresql:42.7.3'
+
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0"
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0"
+
 }
 
 tasks.withType(KotlinCompile) {

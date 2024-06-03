@@ -1,4 +1,4 @@
-package app.manager.persistance.entity
+package app.common.persistance.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.GeneratedValue

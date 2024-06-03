@@ -1,5 +1,6 @@
 package app.manager.persistance.entity
 
+import app.common.persistance.entity.BaseEntity
 import jakarta.persistence.Entity
 
 @Entity
