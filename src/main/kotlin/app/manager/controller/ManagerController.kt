@@ -40,14 +40,20 @@ class ManagerController(
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<String> {
         val userId = jwt.subject
+        print(userId)
         return ResponseEntity.ok(managerService.createSnippet(input, userId))
     }
 
-    @GetMapping("{snippetId}")
+    @GetMapping("snippets/{snippetId}")
     fun getSnippet(
         @PathVariable("snippetId") snippetId: String,
     ): ResponseEntity<GetSnippetOutput> {
-        return ResponseEntity.ok(managerService.getSnippet(snippetId))
+        println("Got to getSnippet")
+        return try {
+            ResponseEntity.ok(managerService.getSnippet(snippetId))
+        } catch (e: Exception) {
+            ResponseEntity.notFound().build()
+        }
     }
 
     @PostMapping("share")

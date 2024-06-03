@@ -9,6 +9,7 @@ import app.manager.model.dto.ShareSnippetInput
 import app.manager.persistance.entity.Snippet
 import app.manager.persistance.repository.SnippetRepository
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
@@ -35,6 +36,7 @@ class ManagerService(
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
+    @Transactional
     fun createSnippet(
         input: CreateSnippetInput,
         userId: String,
@@ -42,7 +44,7 @@ class ManagerService(
         val snippetKey = UUID.randomUUID().toString()
         val bucketURL = "$azuriteBucketUrlV1/$snippetKey"
 
-        val snippet = snippetPersistence(input, snippetKey, userId)
+        val snippet = snippetPersistence(input, snippetKey)
 
         val bucketResponseEntity = createSnippetInBucket(bucketURL, input.content)
         if (bucketResponseEntity.statusCode.is2xxSuccessful) {
@@ -55,16 +57,15 @@ class ManagerService(
     private fun snippetPersistence(
         input: CreateSnippetInput,
         snippetKey: String,
-        userId: String,
     ): Snippet {
         val snippet =
             Snippet(
-                userId = userId,
                 name = input.name,
                 snippetKey = snippetKey,
                 language = input.language,
             )
         snippetRepository.save(snippet)
+        println("Persisted snippet with key: $snippetKey")
         return snippet
     }
 
@@ -82,7 +83,8 @@ class ManagerService(
         snippetId: String,
         userId: String,
     ): String {
-        val permissionsURL = "$permissionsServiceUrl/permission/snippet/create"
+        val permissionsURL = "$permissionsServiceUrl/permission/create"
+        println(permissionsURL)
         val permissionsReq =
             PermissionCreateSnippetInput(
                 snippetId = snippetId,
@@ -93,21 +95,27 @@ class ManagerService(
         val permissionBody = objectMapper.writeValueAsString(permissionsReq)
         val permissionResponseEntity =
             this.restTemplate.postForEntity(permissionsURL, HttpEntity(permissionBody, headers), Any::class.java)
+        println(permissionResponseEntity.statusCode)
 
         if (permissionResponseEntity.statusCode.is2xxSuccessful) {
-            return "Snippet created successfully. Snippet key: $snippetId"
+            println("Created permissions for snippet $snippetId")
+            return "Snippet created successfully. Snippet id: $snippetId"
         } else {
             throw Exception("Failed to create permissions for snippet $snippetId. Status code: ${permissionResponseEntity.statusCode}")
         }
     }
 
     fun getSnippet(snippetId: String): GetSnippetOutput {
+        println(snippetId)
+        println()
         val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
         val snippetKey = snippet.snippetKey
+        print(snippetKey)
         val bucketURL = "$azuriteBucketUrlV1/$snippetKey"
         val bucketResponseEntity = this.restTemplate.getForEntity(bucketURL, String::class.java)
 
         if (bucketResponseEntity.statusCode.is2xxSuccessful) {
+            println("Success")
             val content = bucketResponseEntity.body!!
             return GetSnippetOutput(
                 name = snippet.name,
@@ -119,7 +127,7 @@ class ManagerService(
     }
 
     fun getSnippetsFromUserId(userId: String): List<GetAllSnippetsOutput> {
-        val permissionsURL = "$permissionsServiceUrl/permission/snippet/all/$userId"
+        val permissionsURL = "$permissionsServiceUrl/permission/all/$userId"
         val permissionResponseEntity =
             this.restTemplate.getForEntity(permissionsURL, Array<PermissionsSnippetOutput>::class.java)
 
@@ -127,15 +135,16 @@ class ManagerService(
             val snippets: MutableList<GetAllSnippetsOutput> = emptyList<GetAllSnippetsOutput>().toMutableList()
             for (permissionSnippet in permissionResponseEntity.body!!) {
                 val snippetId = permissionSnippet.snippetId
+                val snippetAuthor = permissionSnippet.authorId
                 val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
-                val snippetoutput =
+                val snippetOutput =
                     GetAllSnippetsOutput(
                         name = snippet.name,
                         snippetId = snippet.id!!,
                         language = snippet.language,
-                        author = snippet.userId,
+                        author = snippetAuthor,
                     )
-                snippets.add(snippetoutput)
+                snippets.add(snippetOutput)
             }
             return snippets
         } else {
@@ -144,10 +153,12 @@ class ManagerService(
     }
 
     fun shareSnippet(input: ShareSnippetInput): String {
-        val permissionsURL = "$permissionsServiceUrl/permission/snippet/create"
-        snippetRepository.findSnippetById(input.snippetId!!) ?: throw Exception("Snippet not found")
+        val permissionsURL = "$permissionsServiceUrl/permission/create"
+        snippetRepository.findSnippetById(input.snippetId) ?: throw Exception("Snippet not found")
         val headers =
             getJsonHeader()
+        println(input.snippetId)
+        println(input.userId)
         val permissionBodyInput =
             PermissionCreateSnippetInput(
                 snippetId = input.snippetId,
@@ -165,6 +176,7 @@ class ManagerService(
         }
     }
 
+    @Transactional
     fun deleteSnippet(snippetId: String): String {
         val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
         val snippetKey = snippet.snippetKey
@@ -173,7 +185,7 @@ class ManagerService(
             this.restTemplate.delete(bucketURL)
             this.snippetRepository.deleteSnippetById(snippetId)
         } catch (e: Exception) {
-            throw Exception("Failed to delete snippet $snippetId. Status code: ${e.message}")
+            throw Exception("Failed to delete snippet $snippetId.")
         }
         return "Snippet deleted successfully"
     }
