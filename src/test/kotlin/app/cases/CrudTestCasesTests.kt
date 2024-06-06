@@ -1,6 +1,8 @@
 package app.cases
 
 import app.cases.model.dto.TestCaseOutput
+import app.manager.persistance.entity.Snippet
+import app.manager.persistance.repository.SnippetRepository
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions
@@ -20,19 +22,25 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @SpringBootTest
 @ExtendWith(SpringExtension::class)
 @AutoConfigureMockMvc
-class ServerTests {
+class CrudTestCasesTests {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
+    @Autowired
+    private lateinit var snippetRepository: SnippetRepository
+
     private val base = "/case"
 
     @Test
     @WithMockUser(username = "test")
-    fun createTestCaseTest() {
-        val testCaseRequest = createMockTestCaseCreateRequest("1")
+    fun `001 _ createTestCaseTest`() {
+        val snippetName = "001"
+        val snippet = snippetRepository.save(Snippet(snippetName, snippetName, "ps"))
+
+        val testCaseRequest = createMockTestCaseCreateRequest(snippet.id!!)
 
         val requestBody = objectMapper.writeValueAsString(testCaseRequest)
 
@@ -45,22 +53,25 @@ class ServerTests {
 
     @Test
     @WithMockUser(username = "test")
-    fun getTestCasesTest() {
-        val testCaseRequest = createMockTestCaseCreateRequest("2")
+    fun `002 _ getTestCasesTest`() {
+        val snippetName = "002"
+        val snippet = snippetRepository.save(Snippet(snippetName, snippetName, "ps"))
+
+        val testCaseRequest = createMockTestCaseCreateRequest(snippet.id!!)
 
         val requestBody = objectMapper.writeValueAsString(testCaseRequest)
 
-        // Post snippet
+        // Post test case
         mockMvc.perform(
             post(base)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody),
         ).andReturn()
 
-        // Get snippets
+        // Get test cases for snippet
         val getResult =
             mockMvc.perform(
-                get("$base/${testCaseRequest.snippetKey}")
+                get("$base/${testCaseRequest.snippetId}")
                     .contentType(MediaType.APPLICATION_JSON),
             ).andReturn()
 

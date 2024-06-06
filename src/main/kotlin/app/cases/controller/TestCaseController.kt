@@ -1,5 +1,6 @@
 package app.cases.controller
 
+import app.cases.exception.TestCaseNotFoundException
 import app.cases.model.dto.CreateCaseInput
 import app.cases.model.dto.TestCaseOutput
 import app.cases.service.TestCaseService
@@ -25,8 +26,12 @@ class TestCaseController
         }
 
         override fun getTestCasesForSnippet(
-            @PathVariable("snippetKey") snippetKey: String,
+            @PathVariable("snippetId") snippetId: String,
         ): List<TestCaseOutput> {
-            return testCaseService.getTestCasesForSnippet(snippetKey)
+            return testCaseService.getTestCasesForSnippet(snippetId)
+        }
+
+        override fun runTestCase(testCaseId: String): ResponseEntity<Unit> {
+            throw TestCaseNotFoundException()
         }
     }

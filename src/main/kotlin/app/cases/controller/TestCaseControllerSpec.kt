@@ -20,11 +20,16 @@ interface TestCaseControllerSpec {
         @RequestBody input: CreateCaseInput,
     ): ResponseEntity<Unit>
 
-    @GetMapping("{snippetKey}")
+    @GetMapping("{snippetId}")
     @Operation(
         summary = "Get all test cases for snippet",
     )
     fun getTestCasesForSnippet(
-        @PathVariable("snippetKey") snippetKey: String,
+        @PathVariable("snippetId") snippetId: String,
     ): List<TestCaseOutput>
+
+    @PostMapping("run/{testCaseId}")
+    fun runTestCase(
+        @PathVariable("testCaseId") testCaseId: String,
+    ): ResponseEntity<Unit>
 }
