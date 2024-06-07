@@ -11,7 +11,7 @@ import jakarta.persistence.OneToMany
 class TestCase(
     val name: String,
     @ManyToOne
-    @JoinColumn(name = "test_case_id", nullable = false)
+    @JoinColumn(name = "snippet_id", nullable = false)
     val snippet: Snippet,
     @OneToMany(mappedBy = "testCase")
     val inputs: List<TestCaseInput> = listOf(),

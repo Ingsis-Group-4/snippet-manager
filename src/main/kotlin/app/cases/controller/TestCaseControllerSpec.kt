@@ -2,6 +2,7 @@ package app.cases.controller
 
 import app.cases.model.dto.CreateCaseInput
 import app.cases.model.dto.TestCaseOutput
+import app.cases.model.dto.TestCaseRunOutput
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import org.springframework.http.ResponseEntity
@@ -31,5 +32,5 @@ interface TestCaseControllerSpec {
     @PostMapping("run/{testCaseId}")
     fun runTestCase(
         @PathVariable("testCaseId") testCaseId: String,
-    ): ResponseEntity<Unit>
+    ): TestCaseRunOutput
 }

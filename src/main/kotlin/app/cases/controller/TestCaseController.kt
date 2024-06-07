@@ -1,8 +1,8 @@
 package app.cases.controller
 
-import app.cases.exception.TestCaseNotFoundException
 import app.cases.model.dto.CreateCaseInput
 import app.cases.model.dto.TestCaseOutput
+import app.cases.model.dto.TestCaseRunOutput
 import app.cases.service.TestCaseService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -31,7 +31,7 @@ class TestCaseController
             return testCaseService.getTestCasesForSnippet(snippetId)
         }
 
-        override fun runTestCase(testCaseId: String): ResponseEntity<Unit> {
-            throw TestCaseNotFoundException()
+        override fun runTestCase(testCaseId: String): TestCaseRunOutput {
+            return testCaseService.runTestCase(testCaseId)
         }
     }
