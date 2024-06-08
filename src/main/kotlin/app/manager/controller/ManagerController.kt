@@ -38,9 +38,8 @@ class ManagerController(
     fun createSnippet(
         @Valid @RequestBody input: CreateSnippetInput,
         @AuthenticationPrincipal jwt: Jwt,
-    ): ResponseEntity<String> {
+    ): ResponseEntity<GetAllSnippetsOutput> {
         val userId = jwt.subject
-        print(userId)
         return ResponseEntity.ok(managerService.createSnippet(input, userId))
     }
 

@@ -1,13 +1,13 @@
 package app.common.rest
 
 import org.springframework.context.annotation.Bean
-import org.springframework.stereotype.Component
+import org.springframework.context.annotation.Configuration
 import org.springframework.web.client.RestTemplate
 
-@Component
-class RestTemplateConfiguration {
+@Configuration
+class RestBean {
     @Bean
-    fun createRestTemplate(): RestTemplate {
+    fun restTemplate(): RestTemplate {
         return RestTemplate()
     }
 }
