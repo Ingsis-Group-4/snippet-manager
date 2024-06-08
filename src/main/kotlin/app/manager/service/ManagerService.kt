@@ -1,5 +1,6 @@
 package app.manager.service
 
+import app.manager.exceptions.NotFoundException
 import app.manager.integration.asset.AssetStoreApi
 import app.manager.integration.permission.SnippetPermissonApi
 import app.manager.model.dto.CreateSnippetInput
@@ -44,14 +45,24 @@ class ManagerService
         fun createSnippet(
             input: CreateSnippetInput,
             userId: String,
-        ): String {
+        ): GetAllSnippetsOutput {
             val snippetKey = UUID.randomUUID().toString()
 
             val snippet = snippetPersistence(input, snippetKey)
 
             val bucketResponseEntity = assetStoreApi.createSnippetInBucket(snippetKey, input.content)
             if (bucketResponseEntity.statusCode.is2xxSuccessful) {
-                return createPermissionsForSnippet(snippet.id!!, userId)
+                try {
+                    createPermissionsForSnippet(snippet.id!!, userId)
+                } catch (e: Exception) {
+                    throw Exception("Failed to create permissions for snippet ${snippet.id}")
+                }
+                return GetAllSnippetsOutput(
+                    name = snippet.name,
+                    snippetId = snippet.id,
+                    language = snippet.language,
+                    author = userId,
+                )
             } else {
                 throw Exception("Failed to create snippet. Status code: ${bucketResponseEntity.statusCode}")
             }
@@ -92,7 +103,7 @@ class ManagerService
         }
 
         fun getSnippet(snippetId: String): GetSnippetOutput {
-            val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
+            val snippet = snippetRepository.findSnippetById(snippetId) ?: throw NotFoundException("Snippet not found")
             val snippetKey = snippet.snippetKey
 
             val bucketResponseEntity = assetStoreApi.getSnippet(snippetKey)
@@ -104,7 +115,7 @@ class ManagerService
                     content = content,
                 )
             } else {
-                throw Exception("Failed to get snippet. Status code: ${bucketResponseEntity.statusCode}")
+                throw NotFoundException("Failed to get snippet. Status code: ${bucketResponseEntity.statusCode}")
             }
         }
 
