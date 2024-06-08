@@ -31,6 +31,11 @@ class TestCaseController
             return testCaseService.getTestCasesForSnippet(snippetId)
         }
 
+        override fun deleteTestCase(testCaseId: String): ResponseEntity<Unit> {
+            testCaseService.deleteTestCaseById(testCaseId)
+            return ResponseEntity.ok().build()
+        }
+
         override fun runTestCase(testCaseId: String): TestCaseRunOutput {
             return testCaseService.runTestCase(testCaseId)
         }

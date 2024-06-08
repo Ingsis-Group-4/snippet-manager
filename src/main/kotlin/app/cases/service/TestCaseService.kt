@@ -107,4 +107,9 @@ class TestCaseService
                 message = "",
             )
         }
+
+        @Transactional
+        fun deleteTestCaseById(testCaseId: String) {
+            return this.testCaseRepository.deleteById(testCaseId)
+        }
     }

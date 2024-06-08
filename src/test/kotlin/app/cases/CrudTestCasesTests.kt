@@ -1,6 +1,8 @@
 package app.cases
 
 import app.cases.model.dto.TestCaseOutput
+import app.cases.persistance.entity.TestCase
+import app.cases.persistance.repository.TestCaseRepository
 import app.manager.persistance.entity.Snippet
 import app.manager.persistance.repository.SnippetRepository
 import com.fasterxml.jackson.core.type.TypeReference
@@ -15,6 +17,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -23,6 +26,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @ExtendWith(SpringExtension::class)
 @AutoConfigureMockMvc
 class CrudTestCasesTests {
+    @Autowired
+    private lateinit var testCaseRepository: TestCaseRepository
+
     @Autowired
     private lateinit var mockMvc: MockMvc
 
@@ -36,7 +42,7 @@ class CrudTestCasesTests {
 
     @Test
     @WithMockUser(username = "test")
-    fun `001 _ createTestCaseTest`() {
+    fun `001 _ create test case for snippet`() {
         val snippetName = "001"
         val snippet = snippetRepository.save(Snippet(snippetName, snippetName, "ps"))
 
@@ -53,7 +59,7 @@ class CrudTestCasesTests {
 
     @Test
     @WithMockUser(username = "test")
-    fun `002 _ getTestCasesTest`() {
+    fun `002 _ get all test cases for snippet`() {
         val snippetName = "002"
         val snippet = snippetRepository.save(Snippet(snippetName, snippetName, "ps"))
 
@@ -84,5 +90,20 @@ class CrudTestCasesTests {
         val testCaseResult = testCaseList[0]
 
         Assertions.assertEquals(testCaseRequest.testCaseName, testCaseResult.testCaseName)
+    }
+
+    @Test
+    @WithMockUser(username = "test")
+    fun `003 _ delete test case`() {
+        // Setup
+        val snippetName = "003"
+        val snippet = snippetRepository.save(Snippet(snippetName, snippetName, "ps"))
+
+        val testCase = testCaseRepository.save(TestCase(snippetName, snippet))
+
+        // Action + Assertion
+        mockMvc.perform(
+            delete("$base/$testCase.id"),
+        ).andExpect(status().isOk)
     }
 }
