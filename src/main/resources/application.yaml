@@ -8,3 +8,12 @@ spring:
         jwt:
           issuer-uri: https://dev-rwvojcsa8mzfij2d.us.auth0.com/
 
+
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
+  stream:
+    request_lint_key: ${REDIS_STREAM_REQUEST_LINT_KEY}
+    result_lint_key: ${REDIS_STREAM_RESULT_LINT_KEY}
+  groups:
+    lint: ${REDIS_STREAM_GROUP_LINT}
