@@ -1,5 +1,7 @@
 package app.rule.service
 
+import app.rule.model.dto.UserRuleOutput
+import app.rule.model.enums.RuleType
 import app.rule.persistance.entity.UserRule
 import app.rule.persistance.repository.RuleRepository
 import app.rule.persistance.repository.UserRuleRepository
@@ -24,5 +26,25 @@ class RuleService
             }
 
             userRuleRepository.saveAll(userRuleEntities)
+        }
+
+        fun getRulesForUserByType(
+            userId: String,
+            ruleType: RuleType,
+        ): List<UserRuleOutput> {
+            val userRules = this.userRuleRepository.findAllByUserIdAndRule_RuleType(userId, ruleType)
+
+            return userRules.map { toUserRuleOutput(it) }
+        }
+
+        private fun toUserRuleOutput(userRule: UserRule): UserRuleOutput {
+            return UserRuleOutput(
+                id = userRule.id!!,
+                userId = userRule.userId,
+                name = userRule.rule.name,
+                value = userRule.value,
+                valueType = userRule.rule.valueType,
+                type = userRule.rule.ruleType,
+            )
         }
     }

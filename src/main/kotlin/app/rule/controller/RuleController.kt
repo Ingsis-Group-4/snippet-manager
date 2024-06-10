@@ -1,5 +1,7 @@
 package app.rule.controller
 
+import app.rule.model.dto.UserRuleOutput
+import app.rule.model.enums.RuleType
 import app.rule.service.RuleService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -16,5 +18,12 @@ class RuleController
             val userId = jwt.subject
             ruleService.createDefaultRulesForUser(userId)
             return ResponseEntity.ok().build()
+        }
+
+        override fun getUserRules(
+            userId: String,
+            ruleType: RuleType,
+        ): List<UserRuleOutput> {
+            return this.ruleService.getRulesForUserByType(userId, ruleType)
         }
     }
