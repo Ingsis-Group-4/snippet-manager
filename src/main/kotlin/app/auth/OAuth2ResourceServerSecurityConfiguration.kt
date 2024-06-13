@@ -1,6 +1,5 @@
 package app.auth
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -16,7 +15,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtValidators
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.web.filter.CorsFilter
 
 @Configuration
 @EnableWebSecurity
@@ -38,7 +36,7 @@ class OAuth2ResourceServerSecurityConfiguration(
         }
             .oauth2ResourceServer { it.jwt(withDefaults()) }
             .cors {
-                it.configurationSource { CorsConfig().corsFilter()}
+                it.configurationSource { CorsConfig().corsFilter() }
             }
             .csrf {
                 it.disable()
