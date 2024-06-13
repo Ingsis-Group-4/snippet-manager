@@ -1,4 +1,4 @@
--- Create linting rules
+-- Create formatting rules
 INSERT INTO rule (id, created_at, updated_at, default_value, name, rule_type, value_type)
 VALUES ('ddade5c7-76ef-4c24-a8eb-c78993f9f740', '2024-05-30 19:40:08.000000', '2024-05-30 19:40:08.000000', 'false',
         'hasSpaceBetweenColon',
@@ -23,7 +23,7 @@ VALUES ('ca7af7f6-1746-474e-8ee8-ccd66d4819e3', '2024-05-30 19:40:08.000000', '2
         'FORMATTING', 'INTEGER')
 ON CONFLICT (id) DO NOTHING;
 
--- Create formatting rules
+-- Create linting rules
 INSERT INTO rule (id, created_at, updated_at, default_value, name, rule_type, value_type)
 VALUES ('06e7e58c-d81e-4b68-b7d3-b0821f130328', '2024-05-30 19:40:08.000000', '2024-05-30 19:40:08.000000',
         '^[a-z]+(?:[A-Z][a-z]*)*$', 'variableNamingRule',
