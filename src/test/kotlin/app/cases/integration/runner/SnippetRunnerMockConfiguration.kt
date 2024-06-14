@@ -1,6 +1,5 @@
-package app.manager
+package app.cases.integration.runner
 
-import app.manager.integration.asset.AssetStoreApi
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Profile
@@ -8,10 +7,10 @@ import org.springframework.stereotype.Component
 
 @Component
 @Profile("test")
-class AssetStoreMockConfiguration {
+class SnippetRunnerMockConfiguration {
     @Bean
     @Primary
-    fun createAssetStoreApi(): AssetStoreApi {
-        return MockAssetStore()
+    fun createRunnerApi(): SnippetRunnerApi {
+        return SnippetRunnerApiMock()
     }
 }

@@ -10,15 +10,10 @@ import app.manager.model.dto.PermissionCreateSnippetInput
 import app.manager.model.dto.ShareSnippetInput
 import app.manager.persistance.entity.Snippet
 import app.manager.persistance.repository.SnippetRepository
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import org.springframework.web.client.RestTemplate
 import java.util.UUID
 
 @Service
@@ -29,18 +24,6 @@ class ManagerService
         private val assetStoreApi: AssetStoreApi,
         private val snippetPermissionApi: SnippetPermissonApi,
     ) {
-        @Value("\${azuriteBucket}")
-        private lateinit var azuriteBucketUrlV1: String
-
-        @Value("\${permissionsService}")
-        private lateinit var permissionsServiceUrl: String
-
-        @Autowired
-        private lateinit var restTemplate: RestTemplate
-
-        @Autowired
-        private lateinit var objectMapper: ObjectMapper
-
         @Transactional
         fun createSnippet(
             input: CreateSnippetInput,
@@ -176,14 +159,6 @@ class ManagerService
                 throw Exception("Failed to delete snippet $snippetId.")
             }
             return "Snippet deleted successfully"
-        }
-
-        private fun getJsonHeader(): HttpHeaders {
-            val headers =
-                HttpHeaders().apply {
-                    contentType = MediaType.APPLICATION_JSON
-                }
-            return headers
         }
 
         private fun throwExceptionIfResponseError(bucketResponse: ResponseEntity<String>) {

@@ -6,12 +6,10 @@ import app.manager.model.dto.GetSnippetOutput
 import app.manager.requests.createMockCreateSnippetRequest
 import app.manager.requests.shareSnippetMockRequest
 import app.manager.service.ManagerService
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.test.context.support.WithMockUser
@@ -25,15 +23,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 class ManagerServiceTests {
     @Autowired
     private lateinit var managerService: ManagerService
-
-    @Autowired
-    private lateinit var objectMapper: ObjectMapper
-
-    @Value("\${azuriteBucket}")
-    private lateinit var azuriteBucketUrl: String
-
-    @Value("\${permissionsService}")
-    private lateinit var permissionsServiceUrl: String
 
     @Test
     @WithMockUser("create-snippet-test-user")
