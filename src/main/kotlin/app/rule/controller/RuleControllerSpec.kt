@@ -21,12 +21,12 @@ interface RuleControllerSpec {
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<Unit>
 
-    @GetMapping("/all/{userId}/{ruleType}")
+    @GetMapping("all/{ruleType}")
     @Operation(
         summary = "Get all user rules from specified type",
     )
     fun getUserRules(
-        @PathVariable userId: String,
+        @AuthenticationPrincipal jwt: Jwt,
         @PathVariable ruleType: RuleType,
     ): List<UserRuleOutput>
 }

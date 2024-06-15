@@ -82,7 +82,7 @@ class RuleAbmTest
 
             val response =
                 mockMvc.perform(
-                    get("$base/all/${TestSecurityConfig.AUTH0ID}/${RuleType.LINTING}")
+                    get("$base/all/${RuleType.LINTING}")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer token"),
                 ).andExpect(status().isOk).andReturn()
 

@@ -21,9 +21,9 @@ class RuleController
         }
 
         override fun getUserRules(
-            userId: String,
+            jwt: Jwt,
             ruleType: RuleType,
         ): List<UserRuleOutput> {
-            return this.ruleService.getRulesForUserByType(userId, ruleType)
+            return this.ruleService.getRulesForUserByType(jwt.subject, ruleType)
         }
     }
