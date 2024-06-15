@@ -42,6 +42,7 @@ class RuleService
                 id = userRule.id!!,
                 userId = userRule.userId,
                 name = userRule.rule.name,
+                isActive = userRule.isActive,
                 value = userRule.value,
                 valueType = userRule.rule.valueType,
                 type = userRule.rule.ruleType,
