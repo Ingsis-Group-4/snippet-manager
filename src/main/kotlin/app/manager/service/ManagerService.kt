@@ -37,7 +37,7 @@ class ManagerService
                 try {
                     createPermissionsForSnippet(snippet.id!!, userId)
                 } catch (e: Exception) {
-                    throw Exception("Failed to create permissions for snippet ${snippet.id}")
+                    throw Exception(e.message)
                 }
                 return GetSnippetOutput(
                     name = snippet.name,
@@ -91,7 +91,11 @@ class ManagerService
 
             val bucketResponseEntity = assetStoreApi.getSnippet(snippetKey)
 
-            // Missing getting the author from the permissions service
+            val authorResponse = snippetPermissionApi.getAuthorBySnippetId(snippetId)
+            if (authorResponse.statusCode.isError) {
+                throw NotFoundException("Failed to get author for snippet $snippetId. Status code: ${authorResponse.statusCode}")
+            }
+            val author = authorResponse.body!!
 
             if (bucketResponseEntity.statusCode.is2xxSuccessful) {
                 val content = bucketResponseEntity.body!!
@@ -100,7 +104,7 @@ class ManagerService
                     name = snippet.name,
                     content = content,
                     language = snippet.language,
-                    author = "authorId",
+                    author = author,
                 )
             } else {
                 throw NotFoundException("Failed to get snippet. Status code: ${bucketResponseEntity.statusCode}")
@@ -117,9 +121,12 @@ class ManagerService
                     val snippetId = permissionSnippet.snippetId
                     val snippetAuthor = permissionSnippet.authorId
                     val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
-                    val content =
-                        assetStoreApi.getSnippet(snippet.snippetKey).body
-                            ?: throw Exception("Failed to get snippet content")
+                    val contentResponse =
+                        assetStoreApi.getSnippet(snippet.snippetKey)
+                    if (!contentResponse.statusCode.is2xxSuccessful) {
+                        throw Exception("Failed to get snippet content for snippet $snippetId. Status code: ${contentResponse.statusCode}")
+                    }
+                    val content = contentResponse.body!!
                     val snippetOutput =
                         GetSnippetOutput(
                             id = snippet.id!!,

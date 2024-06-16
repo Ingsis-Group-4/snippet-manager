@@ -32,6 +32,11 @@ class RemoteSnippetPermission(val rest: RestTemplate, val permissionUrl: String,
         return ResponseEntity.ok().build()
     }
 
+    override fun getAuthorBySnippetId(snippetId: String): ResponseEntity<String> {
+        val getAuthorUrl = "$permissionUrl/author/$snippetId"
+        return rest.getForEntity(getAuthorUrl, String::class.java)
+    }
+
     private fun getJsonHeader(): HttpHeaders {
         val headers =
             HttpHeaders().apply {
