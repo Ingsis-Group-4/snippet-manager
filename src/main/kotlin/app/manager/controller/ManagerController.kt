@@ -1,7 +1,6 @@
 package app.manager.controller
 
 import app.manager.model.dto.CreateSnippetInput
-import app.manager.model.dto.GetAllSnippetsOutput
 import app.manager.model.dto.GetSnippetOutput
 import app.manager.model.dto.ShareSnippetInput
 import app.manager.service.ManagerService
@@ -28,7 +27,7 @@ class ManagerController(
     @GetMapping("snippets")
     fun getSnippetsFromUser(
         @AuthenticationPrincipal jwt: Jwt,
-    ): ResponseEntity<List<GetAllSnippetsOutput>> {
+    ): ResponseEntity<List<GetSnippetOutput>> {
         val userId = jwt.subject
         println(userId)
         return ResponseEntity.ok(managerService.getSnippetsFromUserId(userId))
@@ -38,7 +37,7 @@ class ManagerController(
     fun createSnippet(
         @Valid @RequestBody input: CreateSnippetInput,
         @AuthenticationPrincipal jwt: Jwt,
-    ): ResponseEntity<GetAllSnippetsOutput> {
+    ): ResponseEntity<GetSnippetOutput> {
         val userId = jwt.subject
         return ResponseEntity.ok(managerService.createSnippet(input, userId))
     }

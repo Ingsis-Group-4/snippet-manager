@@ -38,4 +38,14 @@ class MockSnippetPermission(private val list: MutableList<PermissionCreateSnippe
         }
         return ResponseEntity.badRequest().build()
     }
+
+    override fun getAuthorBySnippetId(snippetId: String): ResponseEntity<String> {
+        for (i in list) {
+            if (i.snippetId == snippetId) {
+                val author = i.userId
+                return ResponseEntity.ok(author)
+            }
+        }
+        return ResponseEntity.badRequest().build()
+    }
 }

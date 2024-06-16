@@ -1,7 +1,6 @@
 package app.manager
 
 import app.manager.exceptions.NotFoundException
-import app.manager.model.dto.GetAllSnippetsOutput
 import app.manager.model.dto.GetSnippetOutput
 import app.manager.requests.createMockCreateSnippetRequest
 import app.manager.requests.shareSnippetMockRequest
@@ -29,8 +28,8 @@ class ManagerServiceTests {
     fun createSnippetTest() {
         val requestBody = createMockCreateSnippetRequest("1")
 
-        val result: GetAllSnippetsOutput = managerService.createSnippet(requestBody, "create-snippet-test-user")
-        assert(result.snippetId.isNotEmpty())
+        val result: GetSnippetOutput = managerService.createSnippet(requestBody, "create-snippet-test-user")
+        assert(result.id.isNotEmpty())
         assert(result.name.isNotEmpty())
         assert(result.name == "Snippet 1")
     }
@@ -39,8 +38,8 @@ class ManagerServiceTests {
     @WithMockUser("share-snippet-test-user")
     fun shareSnippetTest() {
         val requestBody = createMockCreateSnippetRequest("1")
-        val snippet: GetAllSnippetsOutput = managerService.createSnippet(requestBody, "share-snippet-test-user")
-        val shareRequest = shareSnippetMockRequest(snippet.snippetId, "share-snippet-test-user-2")
+        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "share-snippet-test-user")
+        val shareRequest = shareSnippetMockRequest(snippet.id, "share-snippet-test-user-2")
         val result: String = managerService.shareSnippet(shareRequest)
         assert(result.isNotEmpty())
         assert(result.contains("Snippet shared successfully"))
@@ -59,7 +58,7 @@ class ManagerServiceTests {
         managerService.createSnippet(requestBody3, "get-all-snippets-test-user")
         managerService.createSnippet(requestBody4, "another-get-all-snippets-test-user")
 
-        val result: List<GetAllSnippetsOutput> = managerService.getSnippetsFromUserId("get-all-snippets-test-user")
+        val result: List<GetSnippetOutput> = managerService.getSnippetsFromUserId("get-all-snippets-test-user")
         assert(result.isNotEmpty())
         assert(result.size == 3)
         assert(result[0].name == "Snippet 1")
@@ -72,8 +71,8 @@ class ManagerServiceTests {
     @WithMockUser("manager-user-test")
     fun getSnippetTest() {
         val requestBody = createMockCreateSnippetRequest("1")
-        val snippet: GetAllSnippetsOutput = managerService.createSnippet(requestBody, "get-snippet-test-user")
-        val snippetId = snippet.snippetId
+        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "get-snippet-test-user")
+        val snippetId = snippet.id
 
         val getResult: GetSnippetOutput = managerService.getSnippet(snippetId)
         assert(getResult.name.isNotEmpty())
@@ -88,9 +87,9 @@ class ManagerServiceTests {
     @WithMockUser("manager-user-test")
     fun deleteSnippet() {
         val requestBody = createMockCreateSnippetRequest("1")
-        val snippet: GetAllSnippetsOutput = managerService.createSnippet(requestBody, "delete-snippet-test-user")
+        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "delete-snippet-test-user")
 
-        val snippetId = snippet.snippetId
+        val snippetId = snippet.id
         managerService.deleteSnippet(snippetId)
 
         assertThrows<NotFoundException> { managerService.getSnippet(snippetId) }

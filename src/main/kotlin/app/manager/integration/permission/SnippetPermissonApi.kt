@@ -10,4 +10,6 @@ interface SnippetPermissonApi {
     fun getAllSnippetsPermission(userId: String): ResponseEntity<Array<PermissionsSnippetOutput>>
 
     fun deleteSnippetPermissions(snippetId: String): ResponseEntity<String>
+
+    fun getAuthorBySnippetId(snippetId: String): ResponseEntity<String>
 }
