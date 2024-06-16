@@ -4,7 +4,6 @@ import app.manager.exceptions.NotFoundException
 import app.manager.integration.asset.AssetStoreApi
 import app.manager.integration.permission.SnippetPermissonApi
 import app.manager.model.dto.CreateSnippetInput
-import app.manager.model.dto.GetAllSnippetsOutput
 import app.manager.model.dto.GetSnippetOutput
 import app.manager.model.dto.PermissionCreateSnippetInput
 import app.manager.model.dto.ShareSnippetInput
@@ -28,7 +27,7 @@ class ManagerService
         fun createSnippet(
             input: CreateSnippetInput,
             userId: String,
-        ): GetAllSnippetsOutput {
+        ): GetSnippetOutput {
             val snippetKey = UUID.randomUUID().toString()
 
             val snippet = snippetPersistence(input, snippetKey)
@@ -40,11 +39,12 @@ class ManagerService
                 } catch (e: Exception) {
                     throw Exception("Failed to create permissions for snippet ${snippet.id}")
                 }
-                return GetAllSnippetsOutput(
+                return GetSnippetOutput(
                     name = snippet.name,
-                    snippetId = snippet.id,
+                    id = snippet.id,
                     language = snippet.language,
                     author = userId,
+                    content = input.content,
                 )
             } else {
                 throw Exception("Failed to create snippet. Status code: ${bucketResponseEntity.statusCode}")
@@ -91,39 +91,48 @@ class ManagerService
 
             val bucketResponseEntity = assetStoreApi.getSnippet(snippetKey)
 
+            // Missing getting the author from the permissions service
+
             if (bucketResponseEntity.statusCode.is2xxSuccessful) {
                 val content = bucketResponseEntity.body!!
                 return GetSnippetOutput(
+                    id = snippetId,
                     name = snippet.name,
                     content = content,
+                    language = snippet.language,
+                    author = "authorId",
                 )
             } else {
                 throw NotFoundException("Failed to get snippet. Status code: ${bucketResponseEntity.statusCode}")
             }
         }
 
-        fun getSnippetsFromUserId(userId: String): List<GetAllSnippetsOutput> {
+        fun getSnippetsFromUserId(userId: String): List<GetSnippetOutput> {
             val permissionResponseEntity =
                 snippetPermissionApi.getAllSnippetsPermission(userId)
 
             if (permissionResponseEntity.statusCode.is2xxSuccessful) {
-                val snippets: MutableList<GetAllSnippetsOutput> = emptyList<GetAllSnippetsOutput>().toMutableList()
+                val snippets: MutableList<GetSnippetOutput> = emptyList<GetSnippetOutput>().toMutableList()
                 for (permissionSnippet in permissionResponseEntity.body!!) {
                     val snippetId = permissionSnippet.snippetId
                     val snippetAuthor = permissionSnippet.authorId
                     val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
+                    val content =
+                        assetStoreApi.getSnippet(snippet.snippetKey).body
+                            ?: throw Exception("Failed to get snippet content")
                     val snippetOutput =
-                        GetAllSnippetsOutput(
+                        GetSnippetOutput(
+                            id = snippet.id!!,
                             name = snippet.name,
-                            snippetId = snippet.id!!,
                             language = snippet.language,
                             author = snippetAuthor,
+                            content = content,
                         )
                     snippets.add(snippetOutput)
                 }
                 return snippets
             } else {
-                throw Exception("Failed to get snippets for user $userId. Status code: ${permissionResponseEntity.statusCode}")
+                throw Exception("Failed to get snippets for user $userId.")
             }
         }
 
