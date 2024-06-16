@@ -7,6 +7,7 @@ class UserRuleOutput(
     val id: String,
     val userId: String,
     val name: String,
+    val isActive: Boolean,
     val value: String,
     val type: RuleType,
     val valueType: RuleValueType,
