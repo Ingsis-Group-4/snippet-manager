@@ -31,7 +31,22 @@ class TestCaseService
         private val runnerApi: SnippetRunnerApi,
     ) {
         @Transactional
-        fun createTestCase(newTestCase: CreateCaseInput) {
+        fun postTestCase(newTestCase: CreateCaseInput): TestCaseOutput {
+            return if (newTestCase.id == null) {
+                createTestCase(newTestCase)
+            } else {
+                updateTestCase(newTestCase.id, newTestCase)
+            }
+        }
+
+        fun getTestCasesForSnippet(snippetId: String): List<TestCaseOutput> {
+            val testCaseEntities = testCaseRepository.findAllBySnippet_Id(snippetId)
+            return testCaseEntities.stream().map {
+                toTestCaseOutput(it)
+            }.toList()
+        }
+
+        private fun createTestCase(newTestCase: CreateCaseInput): TestCaseOutput {
             val snippet = snippetRepository.findSnippetById(newTestCase.snippetId) ?: throw SnippetNotFoundException()
 
             val testCaseEntity =
@@ -42,20 +57,67 @@ class TestCaseService
 
             val savedTestCase = testCaseRepository.save(testCaseEntity)
 
-            newTestCase.inputs.forEach { input ->
-                testCaseInputRepository.save(TestCaseInput(input = input, testCase = savedTestCase))
-            }
+            val savedInputs =
+                newTestCase.inputs.map { input ->
+                    testCaseInputRepository.save(TestCaseInput(input = input, testCase = savedTestCase))
+                }
 
-            newTestCase.expectedOutputs.forEach { output ->
-                testCaseExpectedOutputRepository.save(TestCaseExpectedOutput(output = output, testCase = savedTestCase))
+            val savedOutputs =
+                newTestCase.expectedOutputs.map { output ->
+                    testCaseExpectedOutputRepository.save(TestCaseExpectedOutput(output = output, testCase = savedTestCase))
+                }
+
+            return buildTestCaseOutput(savedTestCase, savedInputs, savedOutputs)
+        }
+
+        private fun updateTestCase(
+            testCaseId: String,
+            newTestCase: CreateCaseInput,
+        ): TestCaseOutput {
+            val testCase = getTestCaseOrThrowNotFound(testCaseId)
+
+            testCase.name = newTestCase.testCaseName
+
+            val updatedTestCase = this.testCaseRepository.save(testCase)
+
+            deleteOldInputsAndOutputs(testCase)
+            val savedInputs = saveNewInputs(testCase, newTestCase.inputs)
+            val savedOutputs = saveNewOutputs(testCase, newTestCase.expectedOutputs)
+
+            return buildTestCaseOutput(updatedTestCase, savedInputs, savedOutputs)
+        }
+
+        private fun getTestCaseOrThrowNotFound(testCaseId: String): TestCase {
+            val testCaseOptional = this.testCaseRepository.findById(testCaseId)
+            if (testCaseOptional.isEmpty) throw TestCaseNotFoundException()
+
+            return testCaseOptional.get()
+        }
+
+        private fun deleteOldInputsAndOutputs(testCase: TestCase) {
+            val oldInputsIds = testCase.inputs.map { it.id!! }
+            val oldExpectedOutputsIds = testCase.expectedOutputs.map { it.id!! }
+
+            this.testCaseInputRepository.deleteAllById(oldInputsIds)
+            this.testCaseExpectedOutputRepository.deleteAllById(oldExpectedOutputsIds)
+        }
+
+        private fun saveNewInputs(
+            testCase: TestCase,
+            inputs: List<String>,
+        ): List<TestCaseInput> {
+            return inputs.map {
+                this.testCaseInputRepository.save(TestCaseInput(input = it, testCase = testCase))
             }
         }
 
-        fun getTestCasesForSnippet(snippetId: String): List<TestCaseOutput> {
-            val testCaseEntities = testCaseRepository.findAllBySnippet_Id(snippetId)
-            return testCaseEntities.stream().map {
-                toTestCaseOutput(it)
-            }.toList()
+        private fun saveNewOutputs(
+            testCase: TestCase,
+            expectedOutputs: List<String>,
+        ): List<TestCaseExpectedOutput> {
+            return expectedOutputs.map {
+                this.testCaseExpectedOutputRepository.save(TestCaseExpectedOutput(output = it, testCase = testCase))
+            }
         }
 
         private fun toTestCaseOutput(testCase: TestCase): TestCaseOutput {
@@ -68,6 +130,20 @@ class TestCaseService
                 testCaseName = testCase.name,
                 inputs = inputs,
                 expectedOutputs = expectedOutputs,
+            )
+        }
+
+        private fun buildTestCaseOutput(
+            testCase: TestCase,
+            inputs: List<TestCaseInput>,
+            expectedOutputs: List<TestCaseExpectedOutput>,
+        ): TestCaseOutput {
+            return TestCaseOutput(
+                id = testCase.id!!,
+                snippetId = testCase.snippet.id!!,
+                testCaseName = testCase.name,
+                inputs = inputs.map { it.input },
+                expectedOutputs = expectedOutputs.map { it.output },
             )
         }
 
