@@ -1,4 +1,4 @@
-package app.cases.integration.runner
+package app.common.integration.runner
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value

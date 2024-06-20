@@ -1,4 +1,4 @@
-package app.cases.integration.runner
+package app.common.integration.runner
 
 import org.springframework.http.HttpEntity
 import org.springframework.web.client.RestTemplate
@@ -17,6 +17,21 @@ class RemoteSnippetRunnerApi(
 
         if (!response.statusCode.is2xxSuccessful) {
             throw Exception("Request to url: '$url' was unsuccessful. Reason: {status: ${response.statusCode}}")
+        }
+
+        return response.body!!
+    }
+
+    override fun formatSnippet(
+        content: String,
+        ruleConfig: String,
+    ): String {
+        val url = "$snippetRunnerUrl/execute/format"
+        val requestBody = FormatSnippetInput(content, ruleConfig)
+        val response = this.restTemplate.postForEntity<String>(url, HttpEntity(requestBody))
+
+        if (!response.statusCode.is2xxSuccessful) {
+            throw Exception("Request to url: '$url' was unsuccessful. Reason: {status: ${response.statusCode}: ${response.body}}")
         }
 
         return response.body!!
