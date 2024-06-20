@@ -11,4 +11,9 @@ interface AssetStoreApi {
     fun getSnippet(snippetKey: String): ResponseEntity<String>
 
     fun deleteSnippet(snippetKey: String): ResponseEntity<String>
+
+    fun updateSnippet(
+        snippetKey: String,
+        newContent: String,
+    ): ResponseEntity<String>
 }
