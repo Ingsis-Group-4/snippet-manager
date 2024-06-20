@@ -7,6 +7,8 @@ plugins {
 	id 'org.jetbrains.kotlin.plugin.spring' version '1.9.23'
 	id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.23'
 	id 'jacoco'
+	id "de.undercouch.download" version "5.3.0"
+
 }
 
 java {
@@ -37,6 +39,8 @@ dependencies {
 	implementation 'org.postgresql:postgresql:42.7.3'
 	implementation 'org.springframework.boot:spring-boot-starter-validation:3.2.5'
 	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+	implementation("com.newrelic.agent.java:newrelic-agent:7.2.0")
+
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
@@ -95,6 +99,18 @@ task installGitHooks(type: Copy) {
 	from new File(rootProject.rootDir, 'hooks/pre-commit')
 	into { new File(rootProject.rootDir, '.git/hooks') }
 }
+task setupNewrelic(type: Download) {
+	mkdir 'newrelic'
+	src 'https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip'
+	dest file('newrelic/newrelic-java.zip')
+	doLast {
+		copy {
+			from zipTree(file('newrelic/newrelic-java.zip'))
+			into rootDir
+		}
+	}
+}
 
 build.dependsOn installGitHooks
+
 

@@ -10,14 +10,15 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
     ports:
-      - "49160:5000"
+      - "49160:4322"
     volumes:
       - ./data:/app/data
     depends_on:
       - api
+      - postgres
     env_file:
       - .env
   postgres:
@@ -28,13 +29,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     env_file:
       - .env
     expose:
-      - "5433"
+      - "5432"
 
   api:
     container_name: "asset_service"
