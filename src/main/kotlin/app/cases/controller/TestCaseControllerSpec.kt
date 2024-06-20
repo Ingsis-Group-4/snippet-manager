@@ -18,9 +18,9 @@ interface TestCaseControllerSpec {
     @Operation(
         summary = "Create a new test case for a snippet",
     )
-    fun createTestCase(
+    fun postTestCase(
         @RequestBody input: CreateCaseInput,
-    ): ResponseEntity<Unit>
+    ): ResponseEntity<TestCaseOutput>
 
     @GetMapping("{snippetId}")
     @Operation(

@@ -18,11 +18,11 @@ class TestCaseController
     constructor(
         private val testCaseService: TestCaseService,
     ) : TestCaseControllerSpec {
-        override fun createTestCase(
+        override fun postTestCase(
             @RequestBody input: CreateCaseInput,
-        ): ResponseEntity<Unit> {
-            testCaseService.createTestCase(input)
-            return ResponseEntity.ok().build()
+        ): ResponseEntity<TestCaseOutput> {
+            val newTestCase = testCaseService.postTestCase(input)
+            return ResponseEntity.ok(newTestCase)
         }
 
         override fun getTestCasesForSnippet(

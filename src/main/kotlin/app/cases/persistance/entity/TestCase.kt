@@ -10,7 +10,7 @@ import jakarta.persistence.OneToMany
 
 @Entity
 class TestCase(
-    val name: String,
+    var name: String,
     @ManyToOne
     @JoinColumn(name = "snippet_id", nullable = false)
     val snippet: Snippet,
