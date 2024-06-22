@@ -2,6 +2,7 @@ package app.cases.controller
 
 import app.cases.model.dto.CreateCaseInput
 import app.cases.model.dto.TestCaseOutput
+import app.cases.model.dto.TestCaseRunOutput
 import app.cases.service.TestCaseService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -17,16 +18,25 @@ class TestCaseController
     constructor(
         private val testCaseService: TestCaseService,
     ) : TestCaseControllerSpec {
-        override fun createTestCase(
+        override fun postTestCase(
             @RequestBody input: CreateCaseInput,
-        ): ResponseEntity<Unit> {
-            testCaseService.createTestCase(input)
-            return ResponseEntity.ok().build()
+        ): ResponseEntity<TestCaseOutput> {
+            val newTestCase = testCaseService.postTestCase(input)
+            return ResponseEntity.ok(newTestCase)
         }
 
         override fun getTestCasesForSnippet(
-            @PathVariable("snippetKey") snippetKey: String,
+            @PathVariable("snippetId") snippetId: String,
         ): List<TestCaseOutput> {
-            return testCaseService.getTestCasesForSnippet(snippetKey)
+            return testCaseService.getTestCasesForSnippet(snippetId)
+        }
+
+        override fun deleteTestCase(testCaseId: String): ResponseEntity<Unit> {
+            testCaseService.deleteTestCaseById(testCaseId)
+            return ResponseEntity.ok().build()
+        }
+
+        override fun runTestCase(testCaseId: String): TestCaseRunOutput {
+            return testCaseService.runTestCase(testCaseId)
         }
     }
