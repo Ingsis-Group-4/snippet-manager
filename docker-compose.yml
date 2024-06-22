@@ -6,12 +6,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+        NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
     environment:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_STREAM_REQUEST_LINT_KEY: ${REDIS_STREAM_REQUEST_LINT_KEY}
@@ -51,6 +56,10 @@ services:
       - "8081:8080"
     environment:
       AZURE_HOST: "http://azurite"
+      NEW_RELIC_APP_NAME: "asset service"
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+    env_file:
+      - .env
 
 
   azurite:
