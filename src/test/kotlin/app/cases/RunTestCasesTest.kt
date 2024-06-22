@@ -1,20 +1,24 @@
 package app.cases
 
+import app.common.TestSecurityConfig
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpHeaders
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 
-@SpringBootTest
+@SpringBootTest(classes = [TestSecurityConfig::class])
 @ExtendWith(SpringExtension::class)
 @AutoConfigureMockMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class RunTestCasesTest {
     @Autowired
@@ -29,7 +33,7 @@ class RunTestCasesTest {
         val testCaseId = "001"
 
         // Action
-        val result = mockMvc.post("$base/run/$testCaseId").andReturn()
+        val result = mockMvc.perform(post("$base/run/$testCaseId").header(HttpHeaders.AUTHORIZATION, "Bearer token")).andReturn()
 
         // Assertion
         Assertions.assertEquals(404, result.response.status)

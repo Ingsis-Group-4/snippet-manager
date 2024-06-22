@@ -5,11 +5,23 @@ import app.manager.model.dto.PermissionsSnippetOutput
 import org.springframework.http.ResponseEntity
 
 interface SnippetPermissonApi {
-    fun createSnippetPermission(body: PermissionCreateSnippetInput): ResponseEntity<Any>
+    fun createSnippetPermission(
+        body: PermissionCreateSnippetInput,
+        token: String,
+    ): ResponseEntity<Any>
 
-    fun getAllSnippetsPermission(userId: String): ResponseEntity<Array<PermissionsSnippetOutput>>
+    fun getAllSnippetsPermission(
+        userId: String,
+        token: String,
+    ): ResponseEntity<Array<PermissionsSnippetOutput>>
 
-    fun deleteSnippetPermissions(snippetId: String): ResponseEntity<String>
+    fun deleteSnippetPermissions(
+        snippetId: String,
+        token: String,
+    ): ResponseEntity<String>
 
-    fun getAuthorBySnippetId(snippetId: String): ResponseEntity<String>
+    fun getAuthorBySnippetId(
+        snippetId: String,
+        token: String,
+    ): ResponseEntity<String>
 }

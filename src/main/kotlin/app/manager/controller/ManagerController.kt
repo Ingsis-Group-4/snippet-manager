@@ -31,8 +31,8 @@ class ManagerController(
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<List<GetSnippetOutput>> {
         val userId = jwt.subject
-        println(userId)
-        return ResponseEntity.ok(managerService.getSnippetsFromUserId(userId))
+        val token = jwt.tokenValue
+        return ResponseEntity.ok(managerService.getSnippetsFromUserId(userId, token))
     }
 
     @PostMapping("create")
@@ -41,16 +41,18 @@ class ManagerController(
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<GetSnippetOutput> {
         val userId = jwt.subject
-        return ResponseEntity.ok(managerService.createSnippet(input, userId))
+        val token = jwt.tokenValue
+        return ResponseEntity.ok(managerService.createSnippet(input, userId, token))
     }
 
     @GetMapping("snippets/{snippetId}")
     fun getSnippet(
         @PathVariable("snippetId") snippetId: String,
+        @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<GetSnippetOutput> {
-        println("Got to getSnippet")
+        val token = jwt.tokenValue
         return try {
-            ResponseEntity.ok(managerService.getSnippet(snippetId))
+            ResponseEntity.ok(managerService.getSnippet(snippetId, token))
         } catch (e: Exception) {
             ResponseEntity.notFound().build()
         }
@@ -59,8 +61,10 @@ class ManagerController(
     @PostMapping("share")
     fun shareSnippet(
         @Valid @RequestBody input: ShareSnippetInput,
+        @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<String> {
-        return ResponseEntity.ok(managerService.shareSnippet(input))
+        val token = jwt.tokenValue
+        return ResponseEntity.ok(managerService.shareSnippet(input, token))
     }
 
     @DeleteMapping("{snippetId}")
@@ -68,14 +72,17 @@ class ManagerController(
         @PathVariable("snippetId") snippetId: String,
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<String> {
-        return ResponseEntity.ok(managerService.deleteSnippet(snippetId))
+        val token = jwt.tokenValue
+        return ResponseEntity.ok(managerService.deleteSnippet(snippetId, token))
     }
 
     @PutMapping("snippets/{snippetId}")
     fun updateSnippet(
         @PathVariable("snippetId") snippetId: String,
         @RequestBody snippetUpdateInput: SnippetContent,
+        @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<GetSnippetOutput> {
-        return ResponseEntity.ok(managerService.updateSnippet(snippetId, snippetUpdateInput))
+        val token = jwt.tokenValue
+        return ResponseEntity.ok(managerService.updateSnippet(snippetId, snippetUpdateInput, token))
     }
 }

@@ -5,42 +5,63 @@ import app.manager.model.dto.PermissionsSnippetOutput
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.RestTemplate
 
-class RemoteSnippetPermission(val rest: RestTemplate, val permissionUrl: String, val objectMapper: ObjectMapper) : SnippetPermissonApi {
-    override fun createSnippetPermission(body: PermissionCreateSnippetInput): ResponseEntity<Any> {
+class RemoteSnippetPermission(val rest: RestTemplate, val permissionUrl: String, val objectMapper: ObjectMapper) :
+    SnippetPermissonApi {
+    override fun createSnippetPermission(
+        body: PermissionCreateSnippetInput,
+        token: String,
+    ): ResponseEntity<Any> {
         val permissionBody = objectMapper.writeValueAsString(body)
         val createPermissionUrl = "$permissionUrl/create"
-        val headers = getJsonHeader()
+        val headers = getJsonHeader(token)
         return rest.postForEntity(createPermissionUrl, HttpEntity(permissionBody, headers), Any::class.java)
     }
 
-    override fun getAllSnippetsPermission(userId: String): ResponseEntity<Array<PermissionsSnippetOutput>> {
+    override fun getAllSnippetsPermission(
+        userId: String,
+        token: String,
+    ): ResponseEntity<Array<PermissionsSnippetOutput>> {
         val getSnippetsUrl: String = "$permissionUrl/all/$userId"
-        return rest.getForEntity(getSnippetsUrl, Array<PermissionsSnippetOutput>::class.java)
+        val headers = getJsonHeader(token)
+        val entity: HttpEntity<Void> = HttpEntity(headers)
+        return rest.exchange(getSnippetsUrl, HttpMethod.GET, entity, Array<PermissionsSnippetOutput>::class.java)
     }
 
-    override fun deleteSnippetPermissions(snippetId: String): ResponseEntity<String> {
+    override fun deleteSnippetPermissions(
+        snippetId: String,
+        token: String,
+    ): ResponseEntity<String> {
         val deleteSnippetUrl = "$permissionUrl/all/$snippetId"
+        val headers = getJsonHeader(token)
+        val entity: HttpEntity<Void> = HttpEntity(headers)
         try {
-            rest.delete(deleteSnippetUrl)
+            rest.exchange(deleteSnippetUrl, HttpMethod.DELETE, entity, String::class.java)
         } catch (e: Exception) {
             return ResponseEntity.badRequest().build()
         }
         return ResponseEntity.ok().build()
     }
 
-    override fun getAuthorBySnippetId(snippetId: String): ResponseEntity<String> {
+    override fun getAuthorBySnippetId(
+        snippetId: String,
+        token: String,
+    ): ResponseEntity<String> {
         val getAuthorUrl = "$permissionUrl/author/$snippetId"
-        return rest.getForEntity(getAuthorUrl, String::class.java)
+        val headers = getJsonHeader(token)
+        val entity: HttpEntity<Void> = HttpEntity(headers)
+        return rest.exchange(getAuthorUrl, HttpMethod.GET, entity, String::class.java)
     }
 
-    private fun getJsonHeader(): HttpHeaders {
+    private fun getJsonHeader(token: String): HttpHeaders {
         val headers =
             HttpHeaders().apply {
                 contentType = MediaType.APPLICATION_JSON
+                set("Authorization", "Bearer $token")
             }
         return headers
     }

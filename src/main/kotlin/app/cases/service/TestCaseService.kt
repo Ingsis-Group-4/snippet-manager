@@ -147,20 +147,24 @@ class TestCaseService
             )
         }
 
-        fun runTestCase(testCaseId: String): TestCaseRunOutput {
+        fun runTestCase(
+            testCaseId: String,
+            token: String,
+        ): TestCaseRunOutput {
             val testCase = testCaseRepository.findById(testCaseId).getOrElse { throw TestCaseNotFoundException() }
 
-            val snippetContent = snippetManagerService.getSnippet(testCase.snippet.id!!)
+            val snippetContent = snippetManagerService.getSnippet(testCase.snippet.id!!, token)
 
-            return runTest(snippetContent.content, testCase.inputs, testCase.expectedOutputs)
+            return runTest(snippetContent.content, testCase.inputs, testCase.expectedOutputs, token)
         }
 
         private fun runTest(
             snippetContent: String,
             inputs: List<TestCaseInput>,
             expectedOutputs: List<TestCaseExpectedOutput>,
+            token: String,
         ): TestCaseRunOutput {
-            val runResult = runnerApi.runSnippet(snippetContent, inputs.map { it.input })
+            val runResult = runnerApi.runSnippet(snippetContent, inputs.map { it.input }, token)
 
             if (runResult.errors.isNotEmpty()) {
                 return TestCaseRunOutput(
