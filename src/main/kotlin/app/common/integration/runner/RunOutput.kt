@@ -1,4 +1,4 @@
-package app.cases.integration.runner
+package app.common.integration.runner
 
 class RunOutput(
     val outputs: List<String>,

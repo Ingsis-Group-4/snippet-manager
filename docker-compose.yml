@@ -17,15 +17,22 @@ services:
       DB_PORT: ${DB_PORT}
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
       NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_STREAM_REQUEST_LINT_KEY: ${REDIS_STREAM_REQUEST_LINT_KEY}
+      REDIS_STREAM_RESULT_LINT_KEY: ${REDIS_STREAM_RESULT_LINT_KEY}
+      REDIS_STREAM_GROUP_LINT: ${REDIS_STREAM_GROUP_LINT}
     ports:
-      - "49160:4322"
+      - "49160:5000"
     volumes:
       - ./data:/app/data
     depends_on:
+      - redis
       - api
       - postgres
     env_file:
       - .env
+
   postgres:
     container_name: "manager-db"
     image: postgres:alpine
@@ -40,7 +47,7 @@ services:
     env_file:
       - .env
     expose:
-      - "5432"
+      - "5433"
 
   api:
     container_name: "asset_service"
@@ -67,43 +74,13 @@ services:
     volumes:
       - blob:/workspace
 
-  snippet-permission:
-    container_name: "snippet-permission"
-    image: ghcr.io/ingsis-group-4/snippet-permission-dev:latest
+  redis:
+    container_name: "redis"
+    image: redis:6-alpine
     ports:
-      - "8080:8080"
-    environment:
-      DB_USERNAME: ${PERMISSION_POSTGRES_USER}
-      DB_PASSWORD: ${PERMISSION_POSTGRES_PASSWORD}
-      DB_NAME: ${PERMISSION_POSTGRES_DB}
-      DB_HOST: ${PERMISSION_DB_HOST}
-      DB_PORT: ${PERMISSION_DB_PORT}
-    env_file:
-      - .env
-    depends_on:
-      - permissions-db
-    expose:
-      - "8080"
-
-  permissions-db:
-    container_name: "permissions-db"
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: ${PERMISSION_POSTGRES_DB}
-      POSTGRES_USER: ${PERMISSION_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${PERMISSION_POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
-    volumes:
-      - permissions-db:/var/lib/postgresql/data
-    env_file:
-      - .env
-    expose:
-      - "5432"
+      - "6379:6379"
 
 volumes:
   blob:
     external: false
   postgres-data:
-  permissions-db:
-

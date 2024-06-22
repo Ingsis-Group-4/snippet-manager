@@ -24,6 +24,14 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven {
+		name = "GitHubPackages"
+		url = uri("https://maven.pkg.github.com/Ingsis-Group-4/spring-mvc-redis-streams.lib")
+		credentials {
+			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+			password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+		}
+	}
 }
 
 dependencies {
@@ -41,6 +49,9 @@ dependencies {
 	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 	implementation("com.newrelic.agent.java:newrelic-agent:7.2.0")
 
+
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("spring-mvc-redis-streams:lib:0.0.2-SNAPSHOT")
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
