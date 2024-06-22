@@ -10,7 +10,8 @@ class UserService
     constructor(
         private val auth0Api: Auth0Api,
     ) {
-        fun getAllUsers(): List<User> {
-            return auth0Api.getAllUsers()
+        fun getAllOtherUsers(userId: String): List<User> {
+            val allUsers = auth0Api.getAllUsers()
+            return allUsers.filter { it.user_id != userId }
         }
     }
