@@ -2,6 +2,10 @@ auth0:
   audience: https://snippet-manager
 
 spring:
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
   security:
     oauth2:
       resourceserver:
@@ -10,8 +14,6 @@ spring:
 
 
 redis:
-  host: ${REDIS_HOST}
-  port: ${REDIS_PORT}
   stream:
     request_lint_key: ${REDIS_STREAM_REQUEST_LINT_KEY}
     result_lint_key: ${REDIS_STREAM_RESULT_LINT_KEY}
