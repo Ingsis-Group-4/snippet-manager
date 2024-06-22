@@ -4,6 +4,7 @@ import app.manager.model.dto.CreateSnippetInput
 import app.manager.model.dto.GetSnippetOutput
 import app.manager.model.dto.ShareSnippetInput
 import app.manager.service.ManagerService
+import app.run.model.dto.SnippetContent
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -72,5 +74,15 @@ class ManagerController(
     ): ResponseEntity<String> {
         val token = jwt.tokenValue
         return ResponseEntity.ok(managerService.deleteSnippet(snippetId, token))
+    }
+
+    @PutMapping("snippets/{snippetId}")
+    fun updateSnippet(
+        @PathVariable("snippetId") snippetId: String,
+        @RequestBody snippetUpdateInput: SnippetContent,
+        @AuthenticationPrincipal jwt: Jwt,
+    ): ResponseEntity<GetSnippetOutput> {
+        val token = jwt.tokenValue
+        return ResponseEntity.ok(managerService.updateSnippet(snippetId, snippetUpdateInput, token))
     }
 }

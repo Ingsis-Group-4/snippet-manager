@@ -2,7 +2,6 @@ package app.cases.service
 
 import app.cases.exception.SnippetNotFoundException
 import app.cases.exception.TestCaseNotFoundException
-import app.cases.integration.runner.SnippetRunnerApi
 import app.cases.model.dto.CreateCaseInput
 import app.cases.model.dto.TestCaseOutput
 import app.cases.model.dto.TestCaseRunOutput
@@ -12,6 +11,7 @@ import app.cases.persistance.entity.TestCaseInput
 import app.cases.persistance.repository.TestCaseExpectedOutputRepository
 import app.cases.persistance.repository.TestCaseInputRepository
 import app.cases.persistance.repository.TestCaseRepository
+import app.common.integration.runner.SnippetRunnerApi
 import app.manager.persistance.repository.SnippetRepository
 import app.manager.service.ManagerService
 import jakarta.transaction.Transactional

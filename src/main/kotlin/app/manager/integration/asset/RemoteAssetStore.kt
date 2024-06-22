@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.postForEntity
 
 class RemoteAssetStore(val rest: RestTemplate, val bucketUrl: String) : AssetStoreApi {
     override fun createSnippetInBucket(
@@ -39,5 +40,14 @@ class RemoteAssetStore(val rest: RestTemplate, val bucketUrl: String) : AssetSto
                 contentType = MediaType.APPLICATION_JSON
             }
         return headers
+    }
+
+    override fun updateSnippet(
+        snippetKey: String,
+        newContent: String,
+    ): ResponseEntity<String> {
+        val bucketUrl = "$bucketUrl/$snippetKey"
+
+        return this.rest.postForEntity(bucketUrl, newContent)
     }
 }

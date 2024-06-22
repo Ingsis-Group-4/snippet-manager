@@ -6,20 +6,33 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+        NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
     environment:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_STREAM_REQUEST_LINT_KEY: ${REDIS_STREAM_REQUEST_LINT_KEY}
+      REDIS_STREAM_RESULT_LINT_KEY: ${REDIS_STREAM_RESULT_LINT_KEY}
+      REDIS_STREAM_GROUP_LINT: ${REDIS_STREAM_GROUP_LINT}
     ports:
       - "49160:5000"
     volumes:
       - ./data:/app/data
     depends_on:
+      - redis
       - api
+      - postgres
     env_file:
       - .env
+
   postgres:
     container_name: "manager-db"
     image: postgres:alpine
@@ -43,6 +56,10 @@ services:
       - "8081:8080"
     environment:
       AZURE_HOST: "http://azurite"
+      NEW_RELIC_APP_NAME: "asset service"
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+    env_file:
+      - .env
 
 
   azurite:
@@ -56,6 +73,12 @@ services:
       - "10002:10002"
     volumes:
       - blob:/workspace
+
+  redis:
+    container_name: "redis"
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
 
 volumes:
   blob:

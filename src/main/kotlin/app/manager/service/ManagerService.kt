@@ -1,5 +1,6 @@
 package app.manager.service
 
+import app.cases.exception.SnippetNotFoundException
 import app.manager.exceptions.NotFoundException
 import app.manager.integration.asset.AssetStoreApi
 import app.manager.integration.permission.SnippetPermissonApi
@@ -9,6 +10,7 @@ import app.manager.model.dto.PermissionCreateSnippetInput
 import app.manager.model.dto.ShareSnippetInput
 import app.manager.persistance.entity.Snippet
 import app.manager.persistance.repository.SnippetRepository
+import app.run.model.dto.SnippetContent
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -193,5 +195,33 @@ class ManagerService
 
         private fun throwExceptionIfResponseError(bucketResponse: ResponseEntity<String>) {
             if (bucketResponse.statusCode.isError) throw Exception("Failed to create snippet. Status code: ${bucketResponse.statusCode}")
+        }
+
+        fun updateSnippet(
+            snippetId: String,
+            snippetUpdateInput: SnippetContent,
+            token: String,
+        ): GetSnippetOutput {
+            val snippet = this.snippetRepository.findSnippetById(snippetId) ?: throw SnippetNotFoundException()
+
+            assetStoreApi.deleteSnippet(snippet.snippetKey)
+            assetStoreApi.updateSnippet(snippet.snippetKey, snippetUpdateInput.content)
+
+            val authorResponse = snippetPermissionApi.getAuthorBySnippetId(snippetId, token)
+
+            if (authorResponse.statusCode.isError) {
+                throw Exception(
+                    "Request to permission service was unsuccessful. " +
+                        "Reason: {status: ${authorResponse.statusCode}: ${authorResponse.body}}",
+                )
+            }
+
+            return GetSnippetOutput(
+                id = snippetId,
+                name = snippet.name,
+                content = snippetUpdateInput.content,
+                language = snippet.language,
+                author = authorResponse.body!!,
+            )
         }
     }

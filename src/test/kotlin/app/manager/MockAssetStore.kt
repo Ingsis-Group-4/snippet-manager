@@ -27,4 +27,11 @@ class MockAssetStore(private val contentMap: MutableMap<String, String> = mutabl
         contentMap.remove(snippetKey)
         return ResponseEntity.ok().build()
     }
+
+    override fun updateSnippet(
+        snippetKey: String,
+        newContent: String,
+    ): ResponseEntity<String> {
+        TODO("Not yet implemented")
+    }
 }
