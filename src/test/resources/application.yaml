@@ -1,0 +1,18 @@
+spring:
+  data:
+    redis:
+      host: test
+      port: 1234
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-rwvojcsa8mzfij2d.us.auth0.com/
+
+redis:
+  stream:
+    request_lint_key: test
+    result_lint_key: test
+  groups:
+    lint: test
