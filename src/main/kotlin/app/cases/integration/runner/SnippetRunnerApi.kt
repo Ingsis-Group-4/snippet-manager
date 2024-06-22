@@ -4,5 +4,6 @@ interface SnippetRunnerApi {
     fun runSnippet(
         content: String,
         inputs: List<String>,
+        token: String,
     ): RunOutput
 }

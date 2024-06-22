@@ -7,12 +7,18 @@ import org.springframework.http.ResponseEntity
 
 class MockSnippetPermission(private val list: MutableList<PermissionCreateSnippetInput> = mutableListOf()) :
     SnippetPermissonApi {
-    override fun createSnippetPermission(body: PermissionCreateSnippetInput): ResponseEntity<Any> {
+    override fun createSnippetPermission(
+        body: PermissionCreateSnippetInput,
+        token: String,
+    ): ResponseEntity<Any> {
         list.add(body)
         return ResponseEntity.ok().build()
     }
 
-    override fun getAllSnippetsPermission(userId: String): ResponseEntity<Array<PermissionsSnippetOutput>> {
+    override fun getAllSnippetsPermission(
+        userId: String,
+        token: String,
+    ): ResponseEntity<Array<PermissionsSnippetOutput>> {
         val auxList: MutableList<PermissionsSnippetOutput> = mutableListOf()
         for (i in list) {
             if (i.userId == userId) {
@@ -29,7 +35,10 @@ class MockSnippetPermission(private val list: MutableList<PermissionCreateSnippe
         return ResponseEntity.ok(auxList.toTypedArray())
     }
 
-    override fun deleteSnippetPermissions(snippetId: String): ResponseEntity<String> {
+    override fun deleteSnippetPermissions(
+        snippetId: String,
+        token: String,
+    ): ResponseEntity<String> {
         for (i in list) {
             if (i.snippetId == snippetId) {
                 list.remove(i)
@@ -39,7 +48,10 @@ class MockSnippetPermission(private val list: MutableList<PermissionCreateSnippe
         return ResponseEntity.badRequest().build()
     }
 
-    override fun getAuthorBySnippetId(snippetId: String): ResponseEntity<String> {
+    override fun getAuthorBySnippetId(
+        snippetId: String,
+        token: String,
+    ): ResponseEntity<String> {
         for (i in list) {
             if (i.snippetId == snippetId) {
                 val author = i.userId

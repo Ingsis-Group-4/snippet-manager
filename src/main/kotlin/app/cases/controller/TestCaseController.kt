@@ -6,6 +6,8 @@ import app.cases.model.dto.TestCaseRunOutput
 import app.cases.service.TestCaseService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
@@ -36,7 +38,11 @@ class TestCaseController
             return ResponseEntity.ok().build()
         }
 
-        override fun runTestCase(testCaseId: String): TestCaseRunOutput {
-            return testCaseService.runTestCase(testCaseId)
+        override fun runTestCase(
+            @PathVariable(value = "testCaseId") testCaseId: String,
+            @AuthenticationPrincipal jwt: Jwt,
+        ): TestCaseRunOutput {
+            val token = jwt.tokenValue
+            return testCaseService.runTestCase(testCaseId, token)
         }
     }

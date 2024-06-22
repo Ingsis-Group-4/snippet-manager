@@ -28,7 +28,7 @@ class ManagerServiceTests {
     fun createSnippetTest() {
         val requestBody = createMockCreateSnippetRequest("1")
 
-        val result: GetSnippetOutput = managerService.createSnippet(requestBody, "create-snippet-test-user")
+        val result: GetSnippetOutput = managerService.createSnippet(requestBody, "create-snippet-test-user", "token")
         assert(result.id.isNotEmpty())
         assert(result.name.isNotEmpty())
         assert(result.name == "Snippet 1")
@@ -38,9 +38,9 @@ class ManagerServiceTests {
     @WithMockUser("share-snippet-test-user")
     fun shareSnippetTest() {
         val requestBody = createMockCreateSnippetRequest("1")
-        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "share-snippet-test-user")
+        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "share-snippet-test-user", "token")
         val shareRequest = shareSnippetMockRequest(snippet.id, "share-snippet-test-user-2")
-        val result: String = managerService.shareSnippet(shareRequest)
+        val result: String = managerService.shareSnippet(shareRequest, "token")
         assert(result.isNotEmpty())
         assert(result.contains("Snippet shared successfully"))
     }
@@ -53,12 +53,12 @@ class ManagerServiceTests {
         val requestBody3 = createMockCreateSnippetRequest("3")
         val requestBody4 = createMockCreateSnippetRequest("4")
 
-        managerService.createSnippet(requestBody1, "get-all-snippets-test-user")
-        managerService.createSnippet(requestBody2, "get-all-snippets-test-user")
-        managerService.createSnippet(requestBody3, "get-all-snippets-test-user")
-        managerService.createSnippet(requestBody4, "another-get-all-snippets-test-user")
+        managerService.createSnippet(requestBody1, "get-all-snippets-test-user", "token")
+        managerService.createSnippet(requestBody2, "get-all-snippets-test-user", "token")
+        managerService.createSnippet(requestBody3, "get-all-snippets-test-user", "token")
+        managerService.createSnippet(requestBody4, "another-get-all-snippets-test-user", "another-token")
 
-        val result: List<GetSnippetOutput> = managerService.getSnippetsFromUserId("get-all-snippets-test-user")
+        val result: List<GetSnippetOutput> = managerService.getSnippetsFromUserId("get-all-snippets-test-user", "token")
         assert(result.isNotEmpty())
         assert(result.size == 3)
         assert(result[0].name == "Snippet 1")
@@ -71,27 +71,27 @@ class ManagerServiceTests {
     @WithMockUser("manager-user-test")
     fun getSnippetTest() {
         val requestBody = createMockCreateSnippetRequest("1")
-        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "get-snippet-test-user")
+        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "get-snippet-test-user", "token")
         val snippetId = snippet.id
 
-        val getResult: GetSnippetOutput = managerService.getSnippet(snippetId)
+        val getResult: GetSnippetOutput = managerService.getSnippet(snippetId, "token")
         assert(getResult.name.isNotEmpty())
         assert(getResult.content.isNotEmpty())
         assert(getResult.name == "Snippet 1")
         assert(getResult.content == "Content 1")
 
-        assertThrows<NotFoundException> { managerService.getSnippet("${snippetId}randomID") }
+        assertThrows<NotFoundException> { managerService.getSnippet("${snippetId}randomID", "token") }
     }
 
     @Test
     @WithMockUser("manager-user-test")
     fun deleteSnippet() {
         val requestBody = createMockCreateSnippetRequest("1")
-        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "delete-snippet-test-user")
+        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "delete-snippet-test-user", "token")
 
         val snippetId = snippet.id
-        managerService.deleteSnippet(snippetId)
+        managerService.deleteSnippet(snippetId, "token")
 
-        assertThrows<NotFoundException> { managerService.getSnippet(snippetId) }
+        assertThrows<NotFoundException> { managerService.getSnippet(snippetId, "token") }
     }
 }

@@ -6,6 +6,8 @@ import app.cases.model.dto.TestCaseRunOutput
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -41,5 +43,6 @@ interface TestCaseControllerSpec {
     @PostMapping("run/{testCaseId}")
     fun runTestCase(
         @PathVariable("testCaseId") testCaseId: String,
+        @AuthenticationPrincipal jwt: Jwt,
     ): TestCaseRunOutput
 }
