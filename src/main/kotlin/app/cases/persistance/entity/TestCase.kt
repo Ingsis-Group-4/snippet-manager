@@ -18,4 +18,6 @@ class TestCase(
     val inputs: List<TestCaseInput> = listOf(),
     @OneToMany(mappedBy = "testCase", cascade = [CascadeType.REMOVE])
     val expectedOutputs: List<TestCaseExpectedOutput> = listOf(),
+    @OneToMany(mappedBy = "testCase", cascade = [CascadeType.REMOVE])
+    val envs: List<TestCaseEnv> = listOf(),
 ) : BaseEntity()

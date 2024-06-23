@@ -1,5 +1,6 @@
 package app.cases
 
+import app.cases.model.dto.TestCaseEnvDto
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class TestCaseRequest(
@@ -11,6 +12,8 @@ data class TestCaseRequest(
     val inputs: List<String>,
     @JsonProperty("expectedOutputs")
     val expectedOutputs: List<String>,
+    @JsonProperty("envs")
+    val envs: List<TestCaseEnvDto>,
 )
 
 fun createMockTestCaseCreateRequest(snippetId: String): TestCaseRequest {
@@ -19,5 +22,6 @@ fun createMockTestCaseCreateRequest(snippetId: String): TestCaseRequest {
         snippetId = snippetId,
         inputs = listOf("input 1"),
         expectedOutputs = listOf("output 1"),
+        envs = listOf(TestCaseEnvDto("key1", "value1")),
     )
 }
