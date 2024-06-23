@@ -11,6 +11,7 @@ import app.manager.model.dto.ShareSnippetInput
 import app.manager.persistance.entity.Snippet
 import app.manager.persistance.repository.SnippetRepository
 import app.run.model.dto.SnippetContent
+import app.user.UserService
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -24,6 +25,7 @@ class ManagerService
         private val snippetRepository: SnippetRepository,
         private val assetStoreApi: AssetStoreApi,
         private val snippetPermissionApi: SnippetPermissonApi,
+        private val userService: UserService,
     ) {
         @Transactional
         fun createSnippet(
@@ -42,11 +44,12 @@ class ManagerService
                 } catch (e: Exception) {
                     throw Exception(e.message)
                 }
+                val username = getUsernameFromUserId(userId)
                 return GetSnippetOutput(
                     name = snippet.name,
                     id = snippet.id,
                     language = snippet.language,
-                    author = userId,
+                    author = username,
                     content = input.content,
                 )
             } else {
@@ -103,6 +106,7 @@ class ManagerService
                 throw NotFoundException("Failed to get author for snippet $snippetId. Status code: ${authorResponse.statusCode}")
             }
             val author = authorResponse.body!!
+            val username = getUsernameFromUserId(author)
 
             if (bucketResponseEntity.statusCode.is2xxSuccessful) {
                 val content = bucketResponseEntity.body!!
@@ -111,7 +115,7 @@ class ManagerService
                     name = snippet.name,
                     content = content,
                     language = snippet.language,
-                    author = author,
+                    author = username,
                 )
             } else {
                 throw NotFoundException("Failed to get snippet. Status code: ${bucketResponseEntity.statusCode}")
@@ -130,6 +134,7 @@ class ManagerService
                 for (permissionSnippet in permissionResponseEntity.body!!) {
                     val snippetId = permissionSnippet.snippetId
                     val snippetAuthor = permissionSnippet.authorId
+                    val username = getUsernameFromUserId(snippetAuthor)
                     val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
                     val contentResponse =
                         assetStoreApi.getSnippet(snippet.snippetKey)
@@ -142,7 +147,7 @@ class ManagerService
                             id = snippet.id!!,
                             name = snippet.name,
                             language = snippet.language,
-                            author = snippetAuthor,
+                            author = username,
                             content = content,
                         )
                     snippets.add(snippetOutput)
@@ -197,6 +202,10 @@ class ManagerService
             if (bucketResponse.statusCode.isError) throw Exception("Failed to create snippet. Status code: ${bucketResponse.statusCode}")
         }
 
+        private fun getUsernameFromUserId(userId: String): String {
+            return userService.getUsernameById(userId)
+        }
+
         fun updateSnippet(
             snippetId: String,
             snippetUpdateInput: SnippetContent,
@@ -215,13 +224,14 @@ class ManagerService
                         "Reason: {status: ${authorResponse.statusCode}: ${authorResponse.body}}",
                 )
             }
+            val username = getUsernameFromUserId(authorResponse.body!!)
 
             return GetSnippetOutput(
                 id = snippetId,
                 name = snippet.name,
                 content = snippetUpdateInput.content,
                 language = snippet.language,
-                author = authorResponse.body!!,
+                author = username,
             )
         }
     }

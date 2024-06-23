@@ -32,6 +32,12 @@ class MockAssetStore(private val contentMap: MutableMap<String, String> = mutabl
         snippetKey: String,
         newContent: String,
     ): ResponseEntity<String> {
-        TODO("Not yet implemented")
+        for ((key) in contentMap) {
+            if (key == snippetKey) {
+                contentMap[key] = newContent
+                return ResponseEntity.ok().build()
+            }
+        }
+        return createSnippetInBucket(snippetKey, newContent)
     }
 }
