@@ -2,8 +2,10 @@ package app.common.integration.runner
 
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.exchange
 import org.springframework.web.client.postForEntity
 
 class RemoteSnippetRunnerApi(
@@ -33,15 +35,26 @@ class RemoteSnippetRunnerApi(
     override fun formatSnippet(
         content: String,
         ruleConfig: String,
+        token: String,
     ): String {
         val url = "$snippetRunnerUrl/execute/format"
         val requestBody = FormatSnippetInput(content, ruleConfig)
-        val response = this.restTemplate.postForEntity<String>(url, HttpEntity(requestBody))
+        val headers = getJsonHeader(token)
+        val response = this.restTemplate.exchange<String>(url, HttpMethod.POST, HttpEntity(requestBody, headers))
 
         if (!response.statusCode.is2xxSuccessful) {
             throw Exception("Request to url: '$url' was unsuccessful. Reason: {status: ${response.statusCode}: ${response.body}}")
         }
 
         return response.body!!
+    }
+
+    private fun getJsonHeader(token: String): HttpHeaders {
+        val headers =
+            HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+                set("Authorization", "Bearer $token")
+            }
+        return headers
     }
 }
