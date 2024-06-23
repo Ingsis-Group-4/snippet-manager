@@ -1,5 +1,6 @@
 package app.common.integration.runner
 
+import app.cases.model.dto.TestCaseEnvDto
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -13,6 +14,7 @@ class RemoteSnippetRunnerApi(
     override fun runSnippet(
         content: String,
         inputs: List<String>,
+        envs: List<TestCaseEnvDto>,
         token: String,
     ): RunOutput {
         val url = "$snippetRunnerUrl/execute/interpret"
@@ -21,7 +23,7 @@ class RemoteSnippetRunnerApi(
                 contentType = MediaType.APPLICATION_JSON
                 set("Authorization", "Bearer $token")
             }
-        val body = RunInput(content, inputs)
+        val body = RunInput(content, inputs, envs)
 
         val response = this.restTemplate.postForEntity<RunOutput>(url, HttpEntity(body, headers))
 
@@ -48,4 +50,4 @@ class RemoteSnippetRunnerApi(
     }
 }
 
-class RunInput(val content: String, val inputs: List<String>)
+class RunInput(val content: String, val inputs: List<String>, val envs: List<TestCaseEnvDto>)

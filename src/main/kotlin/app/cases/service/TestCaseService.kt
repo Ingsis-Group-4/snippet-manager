@@ -73,7 +73,13 @@ class TestCaseService
 
             val savedEnvs =
                 newTestCase.envs.map { env ->
-                    testCaseEnvRepository.save(TestCaseEnv(envKey = env.key, envValue = env.value, testCase = savedTestCase))
+                    testCaseEnvRepository.save(
+                        TestCaseEnv(
+                            envKey = env.key,
+                            envValue = env.value,
+                            testCase = savedTestCase,
+                        ),
+                    )
                 }
 
             val output = buildTestCaseOutput(savedTestCase, savedInputs, savedOutputs, savedEnvs)
@@ -181,16 +187,23 @@ class TestCaseService
 
             val snippetContent = snippetManagerService.getSnippet(testCase.snippet.id!!, token)
 
-            return runTest(snippetContent.content, testCase.inputs, testCase.expectedOutputs, token)
+            return runTest(snippetContent.content, testCase.inputs, testCase.expectedOutputs, testCase.envs, token)
         }
 
         private fun runTest(
             snippetContent: String,
             inputs: List<TestCaseInput>,
             expectedOutputs: List<TestCaseExpectedOutput>,
+            envs: List<TestCaseEnv>,
             token: String,
         ): TestCaseRunOutput {
-            val runResult = runnerApi.runSnippet(snippetContent, inputs.map { it.input }, token)
+            val runResult =
+                runnerApi.runSnippet(
+                    snippetContent,
+                    inputs.map { it.input },
+                    envs.map { TestCaseEnvDto(it.envKey, it.envValue) },
+                    token,
+                )
 
             if (runResult.errors.isNotEmpty()) {
                 return TestCaseRunOutput(
