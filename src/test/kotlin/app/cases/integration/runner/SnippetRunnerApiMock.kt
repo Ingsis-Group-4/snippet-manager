@@ -1,5 +1,6 @@
 package app.cases.integration.runner
 
+import app.cases.model.dto.TestCaseEnvDto
 import app.common.integration.runner.RunOutput
 import app.common.integration.runner.SnippetRunnerApi
 
@@ -7,6 +8,7 @@ class SnippetRunnerApiMock : SnippetRunnerApi {
     override fun runSnippet(
         content: String,
         inputs: List<String>,
+        envs: List<TestCaseEnvDto>,
         token: String,
     ): RunOutput {
         return RunOutput(

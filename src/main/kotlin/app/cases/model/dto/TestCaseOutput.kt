@@ -6,4 +6,5 @@ class TestCaseOutput(
     val testCaseName: String,
     val inputs: List<String>,
     val expectedOutputs: List<String>,
+    val envs: List<TestCaseEnvDto>,
 )
