@@ -15,6 +15,7 @@ import app.common.integration.runner.SnippetRunnerApi
 import app.manager.persistance.repository.SnippetRepository
 import app.manager.service.ManagerService
 import jakarta.transaction.Transactional
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import kotlin.jvm.optionals.getOrElse
@@ -30,16 +31,22 @@ class TestCaseService
         private val snippetManagerService: ManagerService,
         private val runnerApi: SnippetRunnerApi,
     ) {
+        private val logger = LoggerFactory.getLogger(TestCaseService::class.java)
+
         @Transactional
         fun postTestCase(newTestCase: CreateCaseInput): TestCaseOutput {
+            logger.info("Received request for new test case, id: ${newTestCase.id}")
             return if (newTestCase.id == null) {
+                logger.info("Creating new test case")
                 createTestCase(newTestCase)
             } else {
+                logger.info("Updating test case with id: ${newTestCase.id}")
                 updateTestCase(newTestCase.id, newTestCase)
             }
         }
 
         fun getTestCasesForSnippet(snippetId: String): List<TestCaseOutput> {
+            logger.info("Getting test cases for snippet with id: $snippetId")
             val testCaseEntities = testCaseRepository.findAllBySnippet_Id(snippetId)
             return testCaseEntities.stream().map {
                 toTestCaseOutput(it)
@@ -47,7 +54,11 @@ class TestCaseService
         }
 
         private fun createTestCase(newTestCase: CreateCaseInput): TestCaseOutput {
-            val snippet = snippetRepository.findSnippetById(newTestCase.snippetId) ?: throw SnippetNotFoundException()
+            val snippet = snippetRepository.findSnippetById(newTestCase.snippetId)
+            if (snippet == null) {
+                logger.error("Snippet with id ${newTestCase.snippetId} not found")
+                throw SnippetNotFoundException()
+            }
 
             val testCaseEntity =
                 TestCase(
@@ -56,16 +67,19 @@ class TestCaseService
                 )
 
             val savedTestCase = testCaseRepository.save(testCaseEntity)
+            logger.info("Saved test case with id: ${savedTestCase.id}")
 
             val savedInputs =
                 newTestCase.inputs.map { input ->
                     testCaseInputRepository.save(TestCaseInput(input = input, testCase = savedTestCase))
                 }
+            logger.info("Saved inputs for test case with id: ${savedTestCase.id}")
 
             val savedOutputs =
                 newTestCase.expectedOutputs.map { output ->
                     testCaseExpectedOutputRepository.save(TestCaseExpectedOutput(output = output, testCase = savedTestCase))
                 }
+            logger.info("Saved outputs for test case with id: ${savedTestCase.id}")
 
             return buildTestCaseOutput(savedTestCase, savedInputs, savedOutputs)
         }
@@ -79,22 +93,29 @@ class TestCaseService
             testCase.name = newTestCase.testCaseName
 
             val updatedTestCase = this.testCaseRepository.save(testCase)
+            logger.info("Updated test case with id: ${updatedTestCase.id}")
 
             deleteOldInputsAndOutputs(testCase)
+            logger.info("Deleted old inputs and outputs for test case with id: ${updatedTestCase.id}")
             val savedInputs = saveNewInputs(testCase, newTestCase.inputs)
             val savedOutputs = saveNewOutputs(testCase, newTestCase.expectedOutputs)
+            logger.info("Saved new inputs and outputs for test case with id: ${updatedTestCase.id}")
 
             return buildTestCaseOutput(updatedTestCase, savedInputs, savedOutputs)
         }
 
         private fun getTestCaseOrThrowNotFound(testCaseId: String): TestCase {
             val testCaseOptional = this.testCaseRepository.findById(testCaseId)
-            if (testCaseOptional.isEmpty) throw TestCaseNotFoundException()
+            if (testCaseOptional.isEmpty) {
+                logger.error("Test case with id $testCaseId not found")
+                throw TestCaseNotFoundException()
+            }
 
             return testCaseOptional.get()
         }
 
         private fun deleteOldInputsAndOutputs(testCase: TestCase) {
+            logger.info("Attempting to delete old inputs and outputs for test case with id: ${testCase.id}")
             val oldInputsIds = testCase.inputs.map { it.id!! }
             val oldExpectedOutputsIds = testCase.expectedOutputs.map { it.id!! }
 
@@ -138,6 +159,7 @@ class TestCaseService
             inputs: List<TestCaseInput>,
             expectedOutputs: List<TestCaseExpectedOutput>,
         ): TestCaseOutput {
+            logger.info("Building test case output")
             return TestCaseOutput(
                 id = testCase.id!!,
                 snippetId = testCase.snippet.id!!,
@@ -151,8 +173,14 @@ class TestCaseService
             testCaseId: String,
             token: String,
         ): TestCaseRunOutput {
-            val testCase = testCaseRepository.findById(testCaseId).getOrElse { throw TestCaseNotFoundException() }
+            logger.info("Received request to run test case with id: $testCaseId")
+            val testCase =
+                testCaseRepository.findById(testCaseId).getOrElse {
+                    logger.error("Test case with id $testCaseId not found")
+                    throw TestCaseNotFoundException()
+                }
 
+            logger.info("Getting snippet content for test case with id: ${testCase.id}")
             val snippetContent = snippetManagerService.getSnippet(testCase.snippet.id!!, token)
 
             return runTest(snippetContent.content, testCase.inputs, testCase.expectedOutputs, token)
@@ -164,9 +192,11 @@ class TestCaseService
             expectedOutputs: List<TestCaseExpectedOutput>,
             token: String,
         ): TestCaseRunOutput {
+            logger.info("Running test case with inputs: $inputs")
             val runResult = runnerApi.runSnippet(snippetContent, inputs.map { it.input }, token)
 
             if (runResult.errors.isNotEmpty()) {
+                logger.info("Test case failed with errors: ${runResult.errors}")
                 return TestCaseRunOutput(
                     hasPassed = false,
                     message = runResult.errors.joinToString(";"),
@@ -176,12 +206,14 @@ class TestCaseService
             val expectedStringOutputs = expectedOutputs.map { it.output }
 
             if (runResult.outputs != expectedStringOutputs) {
+                logger.info("Test case failed. Expected outputs: $expectedStringOutputs . Actual outputs: ${runResult.outputs}")
                 return TestCaseRunOutput(
                     hasPassed = false,
                     message = "Expected: $expectedStringOutputs  Actual: ${runResult.outputs}",
                 )
             }
 
+            logger.info("Test case passed")
             return TestCaseRunOutput(
                 hasPassed = true,
                 message = "",
@@ -190,6 +222,7 @@ class TestCaseService
 
         @Transactional
         fun deleteTestCaseById(testCaseId: String) {
+            logger.info("Attempting to delete test case with id: $testCaseId")
             return this.testCaseRepository.deleteById(testCaseId)
         }
     }

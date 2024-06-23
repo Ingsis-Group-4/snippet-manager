@@ -5,6 +5,7 @@ import app.rule.model.enums.RuleType
 import app.rule.persistance.entity.UserRule
 import app.rule.persistance.repository.RuleRepository
 import app.rule.persistance.repository.UserRuleRepository
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -15,7 +16,10 @@ class RuleService
         private val ruleRepository: RuleRepository,
         private val userRuleRepository: UserRuleRepository,
     ) {
+        private val logger = LoggerFactory.getLogger(RuleService::class.java)
+
         fun createDefaultRulesForUser(userId: String) {
+            logger.info("Creating default rules for user with id: $userId")
             val rules = ruleRepository.findAll()
             val userRuleEntities = mutableListOf<UserRule>()
 
@@ -24,7 +28,7 @@ class RuleService
                     UserRule(userId, rule.defaultValue, false, rule),
                 )
             }
-
+            logger.info("Saving default rules for user with id: $userId")
             userRuleRepository.saveAll(userRuleEntities)
         }
 
@@ -32,6 +36,7 @@ class RuleService
             userId: String,
             ruleType: RuleType,
         ): List<UserRuleOutput> {
+            logger.info("Getting rules for user with id: $userId and type: $ruleType")
             val userRules = this.userRuleRepository.findAllByUserIdAndRule_RuleType(userId, ruleType)
 
             return userRules.map { toUserRuleOutput(it) }
