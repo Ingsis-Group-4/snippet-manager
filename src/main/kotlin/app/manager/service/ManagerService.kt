@@ -9,6 +9,7 @@ import app.manager.model.dto.GetSnippetOutput
 import app.manager.model.dto.GetSnippetWithStatusOutput
 import app.manager.model.dto.PermissionCreateSnippetInput
 import app.manager.model.dto.ShareSnippetInput
+import app.manager.model.dto.SnippetListOutput
 import app.manager.model.enums.SnippetStatus
 import app.manager.persistance.entity.Snippet
 import app.manager.persistance.entity.SnippetUserStatus
@@ -139,37 +140,45 @@ class ManagerService
         fun getSnippetsFromUserId(
             userId: String,
             token: String,
-        ): List<GetSnippetWithStatusOutput> {
-            val permissionResponseEntity = snippetPermissionApi.getAllSnippetsPermission(userId, token)
+            pageNum: Int,
+            pageSize: Int,
+        ): SnippetListOutput {
+            val permissionResponseEntity =
+                snippetPermissionApi.getAllSnippetsPermission(userId, token, pageNum, pageSize)
 
-            if (!permissionResponseEntity.statusCode.is2xxSuccessful) {
-                throw Exception("Failed to get snippets for user $userId.")
-            }
+            if (permissionResponseEntity.statusCode.is2xxSuccessful) {
+                val snippets: MutableList<GetSnippetWithStatusOutput> = mutableListOf()
+                for (permissionSnippet in permissionResponseEntity.body!!.permissions) {
+                    val snippetId = permissionSnippet.snippetId
+                    val snippetAuthor = permissionSnippet.authorId
+                    val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
+                    val contentResponse =
+                        assetStoreApi.getSnippet(snippet.snippetKey)
+                    if (!contentResponse.statusCode.is2xxSuccessful) {
+                        throw Exception("Failed to get snippet content for snippet $snippetId. Status code: ${contentResponse.statusCode}")
+                    }
 
-            return permissionResponseEntity.body!!.map { permissionSnippet ->
-                val snippet =
-                    snippetRepository.findSnippetById(permissionSnippet.snippetId)
-                        ?: throw SnippetNotFoundException()
+                    val snippetStatus =
+                        snippetUserStatusRepository.findByUserIdAndSnippet_Id(
+                            userId,
+                            snippet.id!!,
+                        ) ?: throw Exception("Snippet status for user not found")
 
-                val contentResponse = assetStoreApi.getSnippet(snippet.snippetKey)
-                if (!contentResponse.statusCode.is2xxSuccessful) {
-                    throw Exception("Failed to get snippet content for snippet ${snippet.id}. Status code: ${contentResponse.statusCode}")
+                    val content = contentResponse.body!!
+                    val snippetOutput =
+                        GetSnippetWithStatusOutput(
+                            id = snippet.id,
+                            name = snippet.name,
+                            language = snippet.language,
+                            author = snippetAuthor,
+                            content = content,
+                            status = snippetStatus.status,
+                        )
+                    snippets.add(snippetOutput)
                 }
-
-                val snippetStatus =
-                    snippetUserStatusRepository.findByUserIdAndSnippet_Id(
-                        userId,
-                        snippet.id!!,
-                    ) ?: throw Exception("Snippet status for user not found")
-
-                GetSnippetWithStatusOutput(
-                    id = snippet.id,
-                    name = snippet.name,
-                    language = snippet.language,
-                    author = getUsernameFromUserId(permissionSnippet.authorId),
-                    content = contentResponse.body!!,
-                    status = snippetStatus.status,
-                )
+                return SnippetListOutput(snippets, permissionResponseEntity.body!!.count)
+            } else {
+                throw Exception("Failed to get snippets for user $userId.")
             }
         }
 

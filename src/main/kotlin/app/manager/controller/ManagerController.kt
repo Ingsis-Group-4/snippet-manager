@@ -2,8 +2,8 @@ package app.manager.controller
 
 import app.manager.model.dto.CreateSnippetInput
 import app.manager.model.dto.GetSnippetOutput
-import app.manager.model.dto.GetSnippetWithStatusOutput
 import app.manager.model.dto.ShareSnippetInput
+import app.manager.model.dto.SnippetListOutput
 import app.manager.service.ManagerService
 import app.run.model.dto.SnippetContent
 import jakarta.validation.Valid
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -28,10 +29,12 @@ class ManagerController(
     @GetMapping("snippets")
     override fun getSnippetsFromUser(
         @AuthenticationPrincipal jwt: Jwt,
-    ): ResponseEntity<List<GetSnippetWithStatusOutput>> {
+        @RequestParam("page_num") pageNum: Int,
+        @RequestParam("page_size") pageSize: Int,
+    ): ResponseEntity<SnippetListOutput> {
         val userId = jwt.subject
         val token = jwt.tokenValue
-        return ResponseEntity.ok(managerService.getSnippetsFromUserId(userId, token))
+        return ResponseEntity.ok(managerService.getSnippetsFromUserId(userId, token, pageNum, pageSize))
     }
 
     @PostMapping("create")
