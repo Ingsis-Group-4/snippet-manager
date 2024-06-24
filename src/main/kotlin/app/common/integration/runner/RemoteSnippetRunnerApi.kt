@@ -1,9 +1,12 @@
 package app.common.integration.runner
 
+import app.cases.model.dto.TestCaseEnvDto
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.exchange
 import org.springframework.web.client.postForEntity
 
 class RemoteSnippetRunnerApi(
@@ -13,6 +16,7 @@ class RemoteSnippetRunnerApi(
     override fun runSnippet(
         content: String,
         inputs: List<String>,
+        envs: List<TestCaseEnvDto>,
         token: String,
     ): RunOutput {
         val url = "$snippetRunnerUrl/execute/interpret"
@@ -21,7 +25,9 @@ class RemoteSnippetRunnerApi(
                 contentType = MediaType.APPLICATION_JSON
                 set("Authorization", "Bearer $token")
             }
-        val response = this.restTemplate.postForEntity<RunOutput>(url, HttpEntity(content, headers))
+        val body = RunInput(content, inputs, envs)
+
+        val response = this.restTemplate.postForEntity<RunOutput>(url, HttpEntity(body, headers))
 
         if (!response.statusCode.is2xxSuccessful) {
             throw Exception("Request to url: '$url' was unsuccessful. Reason: {status: ${response.statusCode}}")
@@ -33,10 +39,12 @@ class RemoteSnippetRunnerApi(
     override fun formatSnippet(
         content: String,
         ruleConfig: String,
+        token: String,
     ): String {
         val url = "$snippetRunnerUrl/execute/format"
         val requestBody = FormatSnippetInput(content, ruleConfig)
-        val response = this.restTemplate.postForEntity<String>(url, HttpEntity(requestBody))
+        val headers = getJsonHeader(token)
+        val response = this.restTemplate.exchange<String>(url, HttpMethod.POST, HttpEntity(requestBody, headers))
 
         if (!response.statusCode.is2xxSuccessful) {
             throw Exception("Request to url: '$url' was unsuccessful. Reason: {status: ${response.statusCode}: ${response.body}}")
@@ -44,4 +52,15 @@ class RemoteSnippetRunnerApi(
 
         return response.body!!
     }
+
+    private fun getJsonHeader(token: String): HttpHeaders {
+        val headers =
+            HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+                set("Authorization", "Bearer $token")
+            }
+        return headers
+    }
 }
+
+class RunInput(val content: String, val inputs: List<String>, val envs: List<TestCaseEnvDto>)
