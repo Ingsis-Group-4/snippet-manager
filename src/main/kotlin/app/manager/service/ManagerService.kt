@@ -15,9 +15,9 @@ import app.manager.persistance.entity.SnippetUserStatus
 import app.manager.persistance.repository.SnippetRepository
 import app.manager.persistance.repository.SnippetUserStatusRepository
 import app.run.model.dto.SnippetContent
+import app.user.UserService
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -28,6 +28,7 @@ class ManagerService
         private val snippetRepository: SnippetRepository,
         private val assetStoreApi: AssetStoreApi,
         private val snippetPermissionApi: SnippetPermissonApi,
+        private val userService: UserService,
         private val snippetUserStatusRepository: SnippetUserStatusRepository,
     ) {
         @Transactional
@@ -50,11 +51,13 @@ class ManagerService
 
                 createUserStatusForSnippet(userId, snippet)
 
+                val username = getUsernameFromUserId(userId)
+
                 return GetSnippetOutput(
                     name = snippet.name,
                     id = snippet.id,
                     language = snippet.language,
-                    author = userId,
+                    author = username,
                     content = input.content,
                 )
             } else {
@@ -73,7 +76,6 @@ class ManagerService
                     language = input.language,
                 )
             snippetRepository.save(snippet)
-            println("Persisted snippet with key: $snippetKey")
             return snippet
         }
 
@@ -108,7 +110,7 @@ class ManagerService
             snippetId: String,
             token: String,
         ): GetSnippetOutput {
-            val snippet = snippetRepository.findSnippetById(snippetId) ?: throw NotFoundException("Snippet not found")
+            val snippet = snippetRepository.findSnippetById(snippetId) ?: throw SnippetNotFoundException()
             val snippetKey = snippet.snippetKey
 
             val bucketResponseEntity = assetStoreApi.getSnippet(snippetKey)
@@ -118,6 +120,7 @@ class ManagerService
                 throw NotFoundException("Failed to get author for snippet $snippetId. Status code: ${authorResponse.statusCode}")
             }
             val author = authorResponse.body!!
+            val username = getUsernameFromUserId(author)
 
             if (bucketResponseEntity.statusCode.is2xxSuccessful) {
                 val content = bucketResponseEntity.body!!
@@ -126,7 +129,7 @@ class ManagerService
                     name = snippet.name,
                     content = content,
                     language = snippet.language,
-                    author = author,
+                    author = username,
                 )
             } else {
                 throw NotFoundException("Failed to get snippet. Status code: ${bucketResponseEntity.statusCode}")
@@ -137,40 +140,36 @@ class ManagerService
             userId: String,
             token: String,
         ): List<GetSnippetWithStatusOutput> {
-            val permissionResponseEntity =
-                snippetPermissionApi.getAllSnippetsPermission(userId, token)
+            val permissionResponseEntity = snippetPermissionApi.getAllSnippetsPermission(userId, token)
 
-            if (permissionResponseEntity.statusCode.is2xxSuccessful) {
-                val snippets: MutableList<GetSnippetWithStatusOutput> = mutableListOf()
-                for (permissionSnippet in permissionResponseEntity.body!!) {
-                    val snippetId = permissionSnippet.snippetId
-                    val snippetAuthor = permissionSnippet.authorId
-                    val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
-                    val snippetStatus =
-                        snippetUserStatusRepository.findByUserIdAndSnippet_Id(
-                            userId,
-                            snippetId,
-                        ) ?: throw Exception("Snippet status for user not found")
-                    val contentResponse =
-                        assetStoreApi.getSnippet(snippet.snippetKey)
-                    if (!contentResponse.statusCode.is2xxSuccessful) {
-                        throw Exception("Failed to get snippet content for snippet $snippetId. Status code: ${contentResponse.statusCode}")
-                    }
-                    val content = contentResponse.body!!
-                    val snippetOutput =
-                        GetSnippetWithStatusOutput(
-                            id = snippet.id!!,
-                            name = snippet.name,
-                            language = snippet.language,
-                            author = snippetAuthor,
-                            content = content,
-                            status = snippetStatus.status,
-                        )
-                    snippets.add(snippetOutput)
-                }
-                return snippets
-            } else {
+            if (!permissionResponseEntity.statusCode.is2xxSuccessful) {
                 throw Exception("Failed to get snippets for user $userId.")
+            }
+
+            return permissionResponseEntity.body!!.map { permissionSnippet ->
+                val snippet =
+                    snippetRepository.findSnippetById(permissionSnippet.snippetId)
+                        ?: throw SnippetNotFoundException()
+
+                val contentResponse = assetStoreApi.getSnippet(snippet.snippetKey)
+                if (!contentResponse.statusCode.is2xxSuccessful) {
+                    throw Exception("Failed to get snippet content for snippet ${snippet.id}. Status code: ${contentResponse.statusCode}")
+                }
+
+                val snippetStatus =
+                    snippetUserStatusRepository.findByUserIdAndSnippet_Id(
+                        userId,
+                        snippet.id!!,
+                    ) ?: throw Exception("Snippet status for user not found")
+
+                GetSnippetWithStatusOutput(
+                    id = snippet.id,
+                    name = snippet.name,
+                    language = snippet.language,
+                    author = getUsernameFromUserId(permissionSnippet.authorId),
+                    content = contentResponse.body!!,
+                    status = snippetStatus.status,
+                )
             }
         }
 
@@ -178,7 +177,7 @@ class ManagerService
             input: ShareSnippetInput,
             token: String,
         ): String {
-            snippetRepository.findSnippetById(input.snippetId) ?: throw Exception("Snippet not found")
+            snippetRepository.findSnippetById(input.snippetId) ?: throw SnippetNotFoundException()
             val permissionBodyInput =
                 PermissionCreateSnippetInput(
                     snippetId = input.snippetId,
@@ -200,24 +199,22 @@ class ManagerService
             snippetId: String,
             token: String,
         ): String {
-            val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
-            val snippetKey = snippet.snippetKey
-            try {
-                val bucketResponse = assetStoreApi.deleteSnippet(snippetKey)
-                val permissionResponse = snippetPermissionApi.deleteSnippetPermissions(snippetId, token)
-                throwExceptionIfResponseError(bucketResponse)
-                throwExceptionIfResponseError(permissionResponse)
-                this.snippetRepository.deleteSnippetById(snippetId)
-            } catch (e: Exception) {
-                throw Exception("Failed to delete snippet $snippetId.")
-            }
+            val snippetKey = snippetRepository.findSnippetById(snippetId)?.snippetKey ?: throw SnippetNotFoundException()
+
+            assetStoreApi.deleteSnippet(snippetKey).takeIf {
+                it.statusCode.isError
+            }?.let { throw Exception("Failed to delete snippet. Status code: ${it.statusCode}") }
+            snippetPermissionApi.deleteSnippetPermissions(snippetId, token).takeIf {
+                it.statusCode.isError
+            }?.let { throw Exception("Failed to delete snippet permissions. Status code: ${it.statusCode}") }
+
+            snippetRepository.deleteSnippetById(snippetId)
+
             return "Snippet deleted successfully"
         }
 
-        private fun throwExceptionIfResponseError(bucketResponse: ResponseEntity<String>) {
-            if (bucketResponse.statusCode.isError) {
-                throw Exception("Failed to create snippet. Status code: ${bucketResponse.statusCode}")
-            }
+        private fun getUsernameFromUserId(userId: String): String {
+            return userService.getUsernameById(userId)
         }
 
         fun updateSnippet(
@@ -238,13 +235,14 @@ class ManagerService
                         "Reason: {status: ${authorResponse.statusCode}: ${authorResponse.body}}",
                 )
             }
+            val username = getUsernameFromUserId(authorResponse.body!!)
 
             return GetSnippetOutput(
                 id = snippetId,
                 name = snippet.name,
                 content = snippetUpdateInput.content,
                 language = snippet.language,
-                author = authorResponse.body!!,
+                author = username,
             )
         }
 

@@ -27,6 +27,19 @@ class RemoteAuth0Api(
         return response.body!!
     }
 
+    override fun getUserById(userId: String): User {
+        val url = "$auth0Url/api/v2/users/$userId"
+        val headers = getJsonHeader()
+        val entity: HttpEntity<Void> = HttpEntity(headers)
+
+        val response = this.restTemplate.exchange<User>(url, HttpMethod.GET, entity)
+
+        if (!response.statusCode.is2xxSuccessful) {
+            throw Exception("Request to url: '$url' was unsuccessful. Reason: {status: ${response.statusCode}}")
+        }
+        return response.body!!
+    }
+
     private fun getJsonHeader(): HttpHeaders {
         val headers =
             HttpHeaders().apply {

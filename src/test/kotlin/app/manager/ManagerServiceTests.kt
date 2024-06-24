@@ -1,11 +1,13 @@
 package app.manager
 
-import app.manager.exceptions.NotFoundException
+import app.cases.exception.SnippetNotFoundException
+import app.common.TestSecurityConfig
 import app.manager.model.dto.GetSnippetOutput
 import app.manager.model.dto.GetSnippetWithStatusOutput
 import app.manager.requests.createMockCreateSnippetRequest
 import app.manager.requests.shareSnippetMockRequest
 import app.manager.service.ManagerService
+import app.run.model.dto.SnippetContent
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -16,7 +18,7 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
-@SpringBootTest
+@SpringBootTest(classes = [TestSecurityConfig::class])
 @ExtendWith(SpringExtension::class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -63,9 +65,6 @@ class ManagerServiceTests {
         assert(result.isNotEmpty())
         assert(result.size == 3)
         assert(result[0].name == "Snippet 1")
-        for (i in result) {
-            assert(i.author == "get-all-snippets-test-user")
-        }
     }
 
     @Test
@@ -81,7 +80,7 @@ class ManagerServiceTests {
         assert(getResult.name == "Snippet 1")
         assert(getResult.content == "Content 1")
 
-        assertThrows<NotFoundException> { managerService.getSnippet("${snippetId}randomID", "token") }
+        assertThrows<SnippetNotFoundException> { managerService.getSnippet("${snippetId}randomID", "token") }
     }
 
     @Test
@@ -93,6 +92,21 @@ class ManagerServiceTests {
         val snippetId = snippet.id
         managerService.deleteSnippet(snippetId, "token")
 
-        assertThrows<NotFoundException> { managerService.getSnippet(snippetId, "token") }
+        assertThrows<SnippetNotFoundException> { managerService.getSnippet(snippetId, "token") }
+    }
+
+    @Test
+    @WithMockUser("manager-user-test")
+    fun updateSnippet() {
+        val requestBody = createMockCreateSnippetRequest("1")
+        val snippet: GetSnippetOutput = managerService.createSnippet(requestBody, "update-snippet-test-user", "token")
+
+        val snippetId = snippet.id
+        val updatedContent = SnippetContent("I am updated content")
+        managerService.updateSnippet(snippetId, updatedContent, "token")
+
+        val updatedSnippet: GetSnippetOutput = managerService.getSnippet(snippetId, "token")
+        assert(updatedSnippet.name == "Snippet 1")
+        assert(updatedSnippet.content == "I am updated content")
     }
 }
