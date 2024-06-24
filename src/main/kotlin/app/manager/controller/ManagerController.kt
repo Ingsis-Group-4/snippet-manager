@@ -17,17 +17,15 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("manager")
 @Validated
 class ManagerController(
     @Autowired val managerService: ManagerService,
-) {
+) : ManagerControllerSpec {
     @GetMapping("snippets")
-    fun getSnippetsFromUser(
+    override fun getSnippetsFromUser(
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<List<GetSnippetOutput>> {
         val userId = jwt.subject
@@ -36,7 +34,7 @@ class ManagerController(
     }
 
     @PostMapping("create")
-    fun createSnippet(
+    override fun createSnippet(
         @Valid @RequestBody input: CreateSnippetInput,
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<GetSnippetOutput> {
@@ -46,7 +44,7 @@ class ManagerController(
     }
 
     @GetMapping("snippets/{snippetId}")
-    fun getSnippet(
+    override fun getSnippet(
         @PathVariable("snippetId") snippetId: String,
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<GetSnippetOutput> {
@@ -59,7 +57,7 @@ class ManagerController(
     }
 
     @PostMapping("share")
-    fun shareSnippet(
+    override fun shareSnippet(
         @Valid @RequestBody input: ShareSnippetInput,
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<String> {
@@ -68,7 +66,7 @@ class ManagerController(
     }
 
     @DeleteMapping("{snippetId}")
-    fun deleteSnippet(
+    override fun deleteSnippet(
         @PathVariable("snippetId") snippetId: String,
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<String> {
@@ -77,7 +75,7 @@ class ManagerController(
     }
 
     @PutMapping("snippets/{snippetId}")
-    fun updateSnippet(
+    override fun updateSnippet(
         @PathVariable("snippetId") snippetId: String,
         @RequestBody snippetUpdateInput: SnippetContent,
         @AuthenticationPrincipal jwt: Jwt,

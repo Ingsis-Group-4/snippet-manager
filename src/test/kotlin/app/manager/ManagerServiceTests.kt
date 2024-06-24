@@ -1,7 +1,7 @@
 package app.manager
 
+import app.cases.exception.SnippetNotFoundException
 import app.common.TestSecurityConfig
-import app.manager.exceptions.NotFoundException
 import app.manager.model.dto.GetSnippetOutput
 import app.manager.requests.createMockCreateSnippetRequest
 import app.manager.requests.shareSnippetMockRequest
@@ -79,7 +79,7 @@ class ManagerServiceTests {
         assert(getResult.name == "Snippet 1")
         assert(getResult.content == "Content 1")
 
-        assertThrows<NotFoundException> { managerService.getSnippet("${snippetId}randomID", "token") }
+        assertThrows<SnippetNotFoundException> { managerService.getSnippet("${snippetId}randomID", "token") }
     }
 
     @Test
@@ -91,7 +91,7 @@ class ManagerServiceTests {
         val snippetId = snippet.id
         managerService.deleteSnippet(snippetId, "token")
 
-        assertThrows<NotFoundException> { managerService.getSnippet(snippetId, "token") }
+        assertThrows<SnippetNotFoundException> { managerService.getSnippet(snippetId, "token") }
     }
 
     @Test
