@@ -2,6 +2,7 @@ package app.manager.controller
 
 import app.manager.model.dto.CreateSnippetInput
 import app.manager.model.dto.GetSnippetOutput
+import app.manager.model.dto.GetSnippetWithStatusOutput
 import app.manager.model.dto.ShareSnippetInput
 import app.run.model.dto.SnippetContent
 import io.swagger.v3.oas.annotations.Operation
@@ -31,7 +32,7 @@ interface ManagerControllerSpec {
     @GetMapping("snippets")
     fun getSnippetsFromUser(
         @AuthenticationPrincipal jwt: Jwt,
-    ): ResponseEntity<List<GetSnippetOutput>>
+    ): ResponseEntity<List<GetSnippetWithStatusOutput>>
 
     @GetMapping("snippets/{snippetId}")
     fun getSnippet(

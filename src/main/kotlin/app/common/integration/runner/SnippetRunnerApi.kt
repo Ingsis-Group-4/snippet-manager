@@ -13,5 +13,6 @@ interface SnippetRunnerApi {
     fun formatSnippet(
         content: String,
         ruleConfig: String,
+        token: String,
     ): String
 }

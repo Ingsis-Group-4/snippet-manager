@@ -10,8 +10,8 @@ import jakarta.persistence.ManyToOne
 data class UserRule(
     val userId: String,
     @Column(name = "rule_value")
-    val value: String,
-    val isActive: Boolean,
+    var value: String,
+    var isActive: Boolean,
     @ManyToOne
     @JoinColumn(name = "rule_id", nullable = false)
     val rule: Rule,

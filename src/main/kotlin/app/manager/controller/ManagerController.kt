@@ -2,6 +2,7 @@ package app.manager.controller
 
 import app.manager.model.dto.CreateSnippetInput
 import app.manager.model.dto.GetSnippetOutput
+import app.manager.model.dto.GetSnippetWithStatusOutput
 import app.manager.model.dto.ShareSnippetInput
 import app.manager.service.ManagerService
 import app.run.model.dto.SnippetContent
@@ -27,7 +28,7 @@ class ManagerController(
     @GetMapping("snippets")
     override fun getSnippetsFromUser(
         @AuthenticationPrincipal jwt: Jwt,
-    ): ResponseEntity<List<GetSnippetOutput>> {
+    ): ResponseEntity<List<GetSnippetWithStatusOutput>> {
         val userId = jwt.subject
         val token = jwt.tokenValue
         return ResponseEntity.ok(managerService.getSnippetsFromUserId(userId, token))
