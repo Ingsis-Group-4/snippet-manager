@@ -8,6 +8,7 @@ import app.manager.model.dto.CreateSnippetInput
 import app.manager.model.dto.GetSnippetOutput
 import app.manager.model.dto.PermissionCreateSnippetInput
 import app.manager.model.dto.ShareSnippetInput
+import app.manager.model.dto.SnippetListOutput
 import app.manager.persistance.entity.Snippet
 import app.manager.persistance.repository.SnippetRepository
 import app.run.model.dto.SnippetContent
@@ -121,13 +122,15 @@ class ManagerService
         fun getSnippetsFromUserId(
             userId: String,
             token: String,
-        ): List<GetSnippetOutput> {
+            pageNum: Int,
+            pageSize: Int,
+        ): SnippetListOutput {
             val permissionResponseEntity =
-                snippetPermissionApi.getAllSnippetsPermission(userId, token)
+                snippetPermissionApi.getAllSnippetsPermission(userId, token, pageNum, pageSize)
 
             if (permissionResponseEntity.statusCode.is2xxSuccessful) {
                 val snippets: MutableList<GetSnippetOutput> = emptyList<GetSnippetOutput>().toMutableList()
-                for (permissionSnippet in permissionResponseEntity.body!!) {
+                for (permissionSnippet in permissionResponseEntity.body!!.permissions) {
                     val snippetId = permissionSnippet.snippetId
                     val snippetAuthor = permissionSnippet.authorId
                     val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
@@ -147,7 +150,7 @@ class ManagerService
                         )
                     snippets.add(snippetOutput)
                 }
-                return snippets
+                return SnippetListOutput(snippets, permissionResponseEntity.body!!.count)
             } else {
                 throw Exception("Failed to get snippets for user $userId.")
             }
