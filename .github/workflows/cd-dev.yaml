@@ -35,6 +35,10 @@ jobs:
           tags: |
             ghcr.io/ingsis-group-4/snippet-manager-dev:${{ steps.short-sha.outputs.sha }}
             ghcr.io/ingsis-group-4/snippet-manager-dev:latest
+
+          build-args: |
+            NEW_RELIC_LICENSE_KEY=${{ secrets.NEW_RELIC_LICENSE_KEY }}
+            NEW_RELIC_APP_NAME=${{ secrets.NEW_RELIC_APP_NAME }}
            
       - name: Update server
         uses: appleboy/ssh-action@master
