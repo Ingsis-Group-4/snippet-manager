@@ -3,6 +3,7 @@ package app.manager
 import app.common.TestSecurityConfig
 import app.manager.model.dto.GetSnippetOutput
 import app.manager.model.dto.ShareSnippetInput
+import app.manager.model.dto.SnippetListOutput
 import app.manager.requests.createMockCreateSnippetRequest
 import app.run.model.dto.SnippetContent
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -57,9 +58,11 @@ class ManagerControllerTests {
     @WithMockUser("user")
     fun `002 _ get all snippets`() {
         val snippetRequest = createMockCreateSnippetRequest("1")
-        val snippetRequest2 = createMockCreateSnippetRequest("2")
+        val snippetRequest2 = createMockCreateSnippetRequest("1")
+        val snippetRequest3 = createMockCreateSnippetRequest("1")
         val requestBody = objectMapper.writeValueAsString(snippetRequest)
         val requestBody2 = objectMapper.writeValueAsString(snippetRequest2)
+        val requestBody3 = objectMapper.writeValueAsString(snippetRequest3)
 
         mockMvc.perform(
             post("$base/create")
@@ -75,17 +78,25 @@ class ManagerControllerTests {
                 .content(requestBody2),
         ).andExpect(status().isOk)
 
+        mockMvc.perform(
+            post("$base/create")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody3),
+        ).andExpect(status().isOk)
+
         val getAllSnippets =
             mockMvc.perform(
-                get("$base/snippets").header(HttpHeaders.AUTHORIZATION, "Bearer token")
+                get("$base/snippets?page_num=1&page_size=1").header(HttpHeaders.AUTHORIZATION, "Bearer token")
                     .contentType(MediaType.APPLICATION_JSON),
             ).andReturn()
 
         val responseBody = getAllSnippets.response.contentAsString
-        val snippetList: List<GetSnippetOutput> =
-            objectMapper.readValue(responseBody, Array<GetSnippetOutput>::class.java).toList()
+        val snippetsOutput: SnippetListOutput =
+            objectMapper.readValue(responseBody, SnippetListOutput::class.java)
 
-        val firstSnippet = snippetList.first()
+        val snippetList = snippetsOutput.snippets
+        val firstSnippet = snippetList[0]
 
         Assertions.assertEquals("Snippet 1", firstSnippet.name)
         Assertions.assertEquals("Content 1", firstSnippet.content)
