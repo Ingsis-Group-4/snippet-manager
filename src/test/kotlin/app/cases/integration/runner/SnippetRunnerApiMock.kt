@@ -20,6 +20,7 @@ class SnippetRunnerApiMock : SnippetRunnerApi {
     override fun formatSnippet(
         content: String,
         ruleConfig: String,
+        token: String,
     ): String {
         TODO("Not yet implemented")
     }

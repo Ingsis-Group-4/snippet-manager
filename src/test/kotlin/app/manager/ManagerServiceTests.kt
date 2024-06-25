@@ -3,6 +3,7 @@ package app.manager
 import app.cases.exception.SnippetNotFoundException
 import app.common.TestSecurityConfig
 import app.manager.model.dto.GetSnippetOutput
+import app.manager.model.dto.SnippetListOutput
 import app.manager.requests.createMockCreateSnippetRequest
 import app.manager.requests.shareSnippetMockRequest
 import app.manager.service.ManagerService
@@ -60,10 +61,13 @@ class ManagerServiceTests {
         managerService.createSnippet(requestBody3, "get-all-snippets-test-user", "token")
         managerService.createSnippet(requestBody4, "another-get-all-snippets-test-user", "another-token")
 
-        val result: List<GetSnippetOutput> = managerService.getSnippetsFromUserId("get-all-snippets-test-user", "token")
-        assert(result.isNotEmpty())
-        assert(result.size == 3)
-        assert(result[0].name == "Snippet 1")
+        val result: SnippetListOutput = managerService.getSnippetsFromUserId("get-all-snippets-test-user", "token", 0, 3)
+        assert(result.snippets.isNotEmpty())
+        assert(result.snippets.size == 3)
+        assert(result.snippets[0].name == "Snippet 1")
+        for (i in result.snippets) {
+            assert(i.author == "get-all-snippets-test-user")
+        }
     }
 
     @Test

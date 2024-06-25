@@ -2,6 +2,7 @@ package app.manager
 
 import app.manager.integration.permission.SnippetPermissonApi
 import app.manager.model.dto.PermissionCreateSnippetInput
+import app.manager.model.dto.PermissionListOutput
 import app.manager.model.dto.PermissionsSnippetOutput
 import org.springframework.http.ResponseEntity
 
@@ -18,7 +19,9 @@ class MockSnippetPermission(private val list: MutableList<PermissionCreateSnippe
     override fun getAllSnippetsPermission(
         userId: String,
         token: String,
-    ): ResponseEntity<Array<PermissionsSnippetOutput>> {
+        pageNum: Int,
+        pageSize: Int,
+    ): ResponseEntity<PermissionListOutput> {
         val auxList: MutableList<PermissionsSnippetOutput> = mutableListOf()
         for (i in list) {
             if (i.userId == userId) {
@@ -32,7 +35,7 @@ class MockSnippetPermission(private val list: MutableList<PermissionCreateSnippe
                 )
             }
         }
-        return ResponseEntity.ok(auxList.toTypedArray())
+        return ResponseEntity.ok(PermissionListOutput(auxList.toTypedArray(), auxList.size))
     }
 
     override fun deleteSnippetPermissions(

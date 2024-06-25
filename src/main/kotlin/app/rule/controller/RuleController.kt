@@ -1,5 +1,6 @@
 package app.rule.controller
 
+import app.rule.model.dto.UpdateUserRuleInput
 import app.rule.model.dto.UserRuleOutput
 import app.rule.model.enums.RuleType
 import app.rule.service.RuleService
@@ -25,5 +26,13 @@ class RuleController
             ruleType: RuleType,
         ): List<UserRuleOutput> {
             return this.ruleService.getRulesForUserByType(jwt.subject, ruleType)
+        }
+
+        override suspend fun updateUserRule(
+            jwt: Jwt,
+            updatedRules: List<UpdateUserRuleInput>,
+        ): ResponseEntity<List<UserRuleOutput>> {
+            val userId = jwt.subject
+            return ResponseEntity.ok(this.ruleService.updateUserRules(userId, updatedRules))
         }
     }

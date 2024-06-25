@@ -18,7 +18,7 @@ class RunController
             snippetContent: SnippetContent,
         ): ResponseEntity<String> {
             val userId = jwt.subject
-            val result = runService.formatSnippetWithUserRules(userId, snippetContent)
+            val result = runService.formatSnippetWithUserRules(userId, snippetContent, jwt.tokenValue)
             return ResponseEntity.ok(result)
         }
     }

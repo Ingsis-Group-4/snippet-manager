@@ -6,10 +6,15 @@ import app.manager.integration.asset.AssetStoreApi
 import app.manager.integration.permission.SnippetPermissonApi
 import app.manager.model.dto.CreateSnippetInput
 import app.manager.model.dto.GetSnippetOutput
+import app.manager.model.dto.GetSnippetWithStatusOutput
 import app.manager.model.dto.PermissionCreateSnippetInput
 import app.manager.model.dto.ShareSnippetInput
+import app.manager.model.dto.SnippetListOutput
+import app.manager.model.enums.SnippetStatus
 import app.manager.persistance.entity.Snippet
+import app.manager.persistance.entity.SnippetUserStatus
 import app.manager.persistance.repository.SnippetRepository
+import app.manager.persistance.repository.SnippetUserStatusRepository
 import app.run.model.dto.SnippetContent
 import app.user.UserService
 import jakarta.transaction.Transactional
@@ -25,6 +30,7 @@ class ManagerService
         private val assetStoreApi: AssetStoreApi,
         private val snippetPermissionApi: SnippetPermissonApi,
         private val userService: UserService,
+        private val snippetUserStatusRepository: SnippetUserStatusRepository,
     ) {
         @Transactional
         fun createSnippet(
@@ -43,7 +49,11 @@ class ManagerService
                 } catch (e: Exception) {
                     throw Exception(e.message)
                 }
+
+                createUserStatusForSnippet(userId, snippet)
+
                 val username = getUsernameFromUserId(userId)
+
                 return GetSnippetOutput(
                     name = snippet.name,
                     id = snippet.id,
@@ -90,6 +100,13 @@ class ManagerService
             }
         }
 
+        private fun createUserStatusForSnippet(
+            userId: String,
+            snippet: Snippet,
+        ) {
+            this.snippetUserStatusRepository.save(SnippetUserStatus(userId, SnippetStatus.PENDING, snippet))
+        }
+
         fun getSnippet(
             snippetId: String,
             token: String,
@@ -123,30 +140,45 @@ class ManagerService
         fun getSnippetsFromUserId(
             userId: String,
             token: String,
-        ): List<GetSnippetOutput> {
-            val permissionResponseEntity = snippetPermissionApi.getAllSnippetsPermission(userId, token)
+            pageNum: Int,
+            pageSize: Int,
+        ): SnippetListOutput {
+            val permissionResponseEntity =
+                snippetPermissionApi.getAllSnippetsPermission(userId, token, pageNum, pageSize)
 
-            if (!permissionResponseEntity.statusCode.is2xxSuccessful) {
-                throw Exception("Failed to get snippets for user $userId.")
-            }
+            if (permissionResponseEntity.statusCode.is2xxSuccessful) {
+                val snippets: MutableList<GetSnippetWithStatusOutput> = mutableListOf()
+                for (permissionSnippet in permissionResponseEntity.body!!.permissions) {
+                    val snippetId = permissionSnippet.snippetId
+                    val snippetAuthor = permissionSnippet.authorId
+                    val snippet = snippetRepository.findSnippetById(snippetId) ?: throw Exception("Snippet not found")
+                    val contentResponse =
+                        assetStoreApi.getSnippet(snippet.snippetKey)
+                    if (!contentResponse.statusCode.is2xxSuccessful) {
+                        throw Exception("Failed to get snippet content for snippet $snippetId. Status code: ${contentResponse.statusCode}")
+                    }
 
-            return permissionResponseEntity.body!!.map { permissionSnippet ->
-                val snippet =
-                    snippetRepository.findSnippetById(permissionSnippet.snippetId)
-                        ?: throw SnippetNotFoundException()
+                    val snippetStatus =
+                        snippetUserStatusRepository.findByUserIdAndSnippet_Id(
+                            userId,
+                            snippet.id!!,
+                        ) ?: throw Exception("Snippet status for user not found")
 
-                val contentResponse = assetStoreApi.getSnippet(snippet.snippetKey)
-                if (!contentResponse.statusCode.is2xxSuccessful) {
-                    throw Exception("Failed to get snippet content for snippet ${snippet.id}. Status code: ${contentResponse.statusCode}")
+                    val content = contentResponse.body!!
+                    val snippetOutput =
+                        GetSnippetWithStatusOutput(
+                            id = snippet.id,
+                            name = snippet.name,
+                            language = snippet.language,
+                            author = snippetAuthor,
+                            content = content,
+                            status = snippetStatus.status,
+                        )
+                    snippets.add(snippetOutput)
                 }
-
-                GetSnippetOutput(
-                    id = snippet.id!!,
-                    name = snippet.name,
-                    language = snippet.language,
-                    author = getUsernameFromUserId(permissionSnippet.authorId),
-                    content = contentResponse.body!!,
-                )
+                return SnippetListOutput(snippets, permissionResponseEntity.body!!.count)
+            } else {
+                throw Exception("Failed to get snippets for user $userId.")
             }
         }
 
@@ -221,5 +253,27 @@ class ManagerService
                 language = snippet.language,
                 author = username,
             )
+        }
+
+        fun updateAllUserSnippetsStatus(
+            userId: String,
+            newStatus: SnippetStatus,
+        ): List<SnippetUserStatus> {
+            val userSnippetStatuses = this.snippetUserStatusRepository.findAllByUserId(userId)
+
+            for (snippetStatus in userSnippetStatuses) {
+                snippetStatus.status = newStatus
+            }
+
+            return snippetUserStatusRepository.saveAll(userSnippetStatuses)
+        }
+
+        @Transactional
+        fun updateUserSnippetStatusBySnippetKey(
+            userId: String,
+            snippetKey: String,
+            status: SnippetStatus,
+        ) {
+            snippetUserStatusRepository.updateByUserIdAndSnippetKey(userId, snippetKey, status)
         }
     }
