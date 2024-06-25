@@ -39,6 +39,8 @@ jobs:
           build-args: |
             NEW_RELIC_LICENSE_KEY=${{ secrets.NEW_RELIC_LICENSE_KEY }}
             NEW_RELIC_APP_NAME=${{ secrets.NEW_RELIC_APP_NAME }}
+            ACTOR=${{ github.repository_owner }}
+            TOKEN=${{ secrets.GITHUB_TOKEN }}
            
       - name: Update server
         uses: appleboy/ssh-action@master
