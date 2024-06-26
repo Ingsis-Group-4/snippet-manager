@@ -20,6 +20,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: Ingsis-Group-4/common-actions/.github/workflows/ci.yaml
+      - uses: Ingsis-Group-4/common-actions/.github/workflows/ci.yaml@common-ci
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
