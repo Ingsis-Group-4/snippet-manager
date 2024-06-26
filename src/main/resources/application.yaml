@@ -14,20 +14,20 @@ spring:
           issuer-uri: https://dev-rwvojcsa8mzfij2d.us.auth0.com/
   application:
     name: snippet-manager
-    datasource:
-      url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5433}/${DB_NAME:manager-db}
-      username: ${DB_USERNAME:postgres}
-      password: ${DB_PASSWORD:postgres}
-    jpa:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5433}/${DB_NAME:manager-db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
       hibernate:
-        ddl-auto: update
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.PostgreSQLDialect
-      defer-datasource-initialization: true
-    sql:
-      init:
-        mode: always
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
 
 azuriteBucket: ${AZURITE_BUCKET_URL_V1:http://asset_service:8080/v1/asset/snippet}
 permissionsService: ${PERMISSION_SNIPPET_SERVICE_URL:http://permission_service:8081/permission}
