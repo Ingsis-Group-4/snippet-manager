@@ -1,5 +1,7 @@
 package app.manager.integration.asset
 
+import app.logs.CorrelationIdFilter.Companion.CORRELATION_ID_KEY
+import org.slf4j.MDC
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -35,9 +37,11 @@ class RemoteAssetStore(val rest: RestTemplate, val bucketUrl: String) : AssetSto
     }
 
     private fun getJsonHeader(): HttpHeaders {
+        val correlationId = MDC.get(CORRELATION_ID_KEY)
         val headers =
             HttpHeaders().apply {
                 contentType = MediaType.APPLICATION_JSON
+                set("X-Correlation-Id", correlationId)
             }
         return headers
     }

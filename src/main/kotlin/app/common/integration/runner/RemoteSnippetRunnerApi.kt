@@ -1,6 +1,8 @@
 package app.common.integration.runner
 
+import app.logs.CorrelationIdFilter.Companion.CORRELATION_ID_KEY
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -24,6 +26,7 @@ class RemoteSnippetRunnerApi(
             HttpHeaders().apply {
                 contentType = MediaType.APPLICATION_JSON
                 set("Authorization", "Bearer $token")
+                set("X-Correlation-Id", MDC.get(CORRELATION_ID_KEY))
             }
         val response = this.restTemplate.postForEntity<RunOutput>(url, HttpEntity(content, headers))
 
@@ -42,7 +45,11 @@ class RemoteSnippetRunnerApi(
         logger.info("Formatting snippet with content: $content")
         val url = "$snippetRunnerUrl/execute/format"
         val requestBody = FormatSnippetInput(content, ruleConfig)
-        val response = this.restTemplate.postForEntity<String>(url, HttpEntity(requestBody))
+        val headers =
+            HttpHeaders().apply {
+                set("X-Correlation-Id", CORRELATION_ID_KEY)
+            }
+        val response = this.restTemplate.postForEntity<String>(url, HttpEntity(requestBody, headers))
 
         if (!response.statusCode.is2xxSuccessful) {
             logger.error("Request to url: '$url' was unsuccessful. Reason: {status: ${response.statusCode}: ${response.body}}")
