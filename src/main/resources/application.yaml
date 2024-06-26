@@ -1,7 +1,7 @@
 auth0:
   managing:
     token: ${AUTH0_MANAGING_TOKEN:pepito}
-  audience: https://snippet-manager
+  audience: ${AUTH0_AUDIENCE:https://snippet-manager}
 spring:
   data:
     redis:
@@ -11,7 +11,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://dev-rwvojcsa8mzfij2d.us.auth0.com/
+          issuer-uri: ${AUTH0_ISSUER_URI:https://dev-rwvojcsa8mzfij2d.us.auth0.com/}
   application:
     name: snippet-manager
   datasource:
