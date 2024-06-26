@@ -47,6 +47,7 @@ class ManagerService
             val snippet = snippetPersistence(input, snippetKey)
 
             logger.info("Attempting to create snippet in asset store")
+            logger.info("Content to be saved: ${input.content}")
             val bucketResponseEntity = assetStoreApi.createSnippetInBucket(snippetKey, input.content)
             if (bucketResponseEntity.statusCode.is2xxSuccessful) {
                 logger.info("Snippet created in asset store")
