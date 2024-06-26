@@ -30,5 +30,17 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/ingsis-group-4/snippet-manager-main:${{ steps.short-sha.outputs.sha }}
+      - name: Update server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_URL }}
+          username: "snippet-searcher-admin"
+          key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          script: |
+            cd snippet-infra
+            docker compose -f docker-compose.prod.yml stop snippet-manager
+            docker compose -f docker-compose.prod.yml pull snippet-manager
+            docker compose -f docker-compose.prod.yml up snippet-manager -d --build

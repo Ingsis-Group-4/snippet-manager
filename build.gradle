@@ -7,6 +7,8 @@ plugins {
 	id 'org.jetbrains.kotlin.plugin.spring' version '1.9.23'
 	id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.23'
 	id 'jacoco'
+	id "de.undercouch.download" version "5.3.0"
+
 }
 
 java {
@@ -22,6 +24,14 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven {
+		name = "GitHubPackages"
+		url = uri("https://maven.pkg.github.com/Ingsis-Group-4/spring-mvc-redis-streams.lib")
+		credentials {
+			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+			password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+		}
+	}
 }
 
 dependencies {
@@ -31,15 +41,46 @@ dependencies {
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+	implementation 'org.postgresql:postgresql:42.7.3'
+	implementation 'org.springframework.boot:spring-boot-starter-validation:3.2.5'
+	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+	implementation("com.newrelic.agent.java:newrelic-agent:7.2.0")
+
+
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("spring-mvc-redis-streams:lib:0.0.2-SNAPSHOT")
+
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'org.springframework.boot:spring-boot-starter-logging'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.projectreactor:reactor-test'
+	testImplementation 'com.h2database:h2:2.2.224'
+	testImplementation 'org.springframework.security:spring-security-test'
 
 	ktlint("com.pinterest.ktlint:ktlint-cli:1.2.1") {
 		attributes {
 			attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
 		}
 	}
+
+	implementation 'org.springframework.boot:spring-boot-starter-validation:3.2.5'
+	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+
+	implementation 'org.postgresql:postgresql:42.7.3'
+
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0"
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0"
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'io.projectreactor.kotlin:reactor-kotlin-extensions'
+	implementation 'org.jetbrains.kotlin:kotlin-reflect'
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor'
+
 }
 
 tasks.withType(KotlinCompile) {
@@ -78,6 +119,18 @@ task installGitHooks(type: Copy) {
 	from new File(rootProject.rootDir, 'hooks/pre-commit')
 	into { new File(rootProject.rootDir, '.git/hooks') }
 }
+task setupNewrelic(type: Download) {
+	mkdir 'newrelic'
+	src 'https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip'
+	dest file('newrelic/newrelic-java.zip')
+	doLast {
+		copy {
+			from zipTree(file('newrelic/newrelic-java.zip'))
+			into rootDir
+		}
+	}
+}
 
 build.dependsOn installGitHooks
+
 
