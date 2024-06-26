@@ -4,6 +4,8 @@ import app.cases.exception.SnippetNotFoundException
 import app.common.TestSecurityConfig
 import app.manager.model.dto.GetSnippetOutput
 import app.manager.model.dto.SnippetListOutput
+import app.manager.model.enums.SnippetStatus
+import app.manager.persistance.entity.SnippetUserStatus
 import app.manager.requests.createMockCreateSnippetRequest
 import app.manager.requests.shareSnippetMockRequest
 import app.manager.service.ManagerService
@@ -61,7 +63,8 @@ class ManagerServiceTests {
         managerService.createSnippet(requestBody3, "get-all-snippets-test-user", "token")
         managerService.createSnippet(requestBody4, "another-get-all-snippets-test-user", "another-token")
 
-        val result: SnippetListOutput = managerService.getSnippetsFromUserId("get-all-snippets-test-user", "token", 0, 3)
+        val result: SnippetListOutput =
+            managerService.getSnippetsFromUserId("get-all-snippets-test-user", "token", 0, 3)
         assert(result.snippets.isNotEmpty())
         assert(result.snippets.size == 3)
         assert(result.snippets[0].name == "Snippet 1")
@@ -111,5 +114,20 @@ class ManagerServiceTests {
         val updatedSnippet: GetSnippetOutput = managerService.getSnippet(snippetId, "token")
         assert(updatedSnippet.name == "Snippet 1")
         assert(updatedSnippet.content == "I am updated content")
+    }
+
+    @Test
+    @WithMockUser("manager-user-test")
+    fun updateAllSnippetStatus() {
+        val requestBody = createMockCreateSnippetRequest("1")
+        val requestBody2 = createMockCreateSnippetRequest("2")
+        managerService.createSnippet(requestBody, "update-all-snippet-status-user", "token")
+        managerService.createSnippet(requestBody2, "update-all-snippet-status-user", "token")
+
+        val result: List<SnippetUserStatus> =
+            managerService.updateAllUserSnippetsStatus("update-all-snippet-status-user", SnippetStatus.COMPLIANT)
+        assert(result.isNotEmpty())
+        assert(result[0].status == SnippetStatus.COMPLIANT)
+        assert(result[1].status == SnippetStatus.COMPLIANT)
     }
 }

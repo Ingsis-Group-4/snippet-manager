@@ -1,5 +1,6 @@
 package app.cases
 
+import app.cases.model.dto.CreateCaseInput
 import app.cases.model.dto.TestCaseOutput
 import app.cases.persistance.entity.TestCase
 import app.cases.persistance.repository.TestCaseRepository
@@ -105,5 +106,38 @@ class CrudTestCasesTests {
         mockMvc.perform(
             delete("$base/$testCase.id"),
         ).andExpect(status().isOk)
+    }
+
+    @Test
+    @WithMockUser(username = "test")
+    fun `004 _ update test case`() {
+        // Setup
+        val snippetName = "004"
+        val snippet = snippetRepository.save(Snippet(snippetName, snippetName, "ps"))
+
+        val testCase = testCaseRepository.save(TestCase(snippetName, snippet))
+
+        val updatedTestCaseInput =
+            CreateCaseInput(testCase.id, snippet.id!!, "Updated Test Case Name", emptyList(), emptyList(), emptyList())
+
+        val requestBody = objectMapper.writeValueAsString(updatedTestCaseInput)
+
+        val updatedTestCase =
+            mockMvc.perform(
+                post(base)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody),
+            ).andReturn()
+
+        val updatedResponseBody = updatedTestCase.response.contentAsString
+
+        val updatedTestCaseResult: TestCaseOutput = objectMapper.readValue(updatedResponseBody, TestCaseOutput::class.java)
+
+        Assertions.assertEquals(updatedTestCaseInput.testCaseName, updatedTestCaseResult.testCaseName)
+        Assertions.assertEquals(testCase.id, updatedTestCaseResult.id)
+        Assertions.assertEquals(snippet.id, updatedTestCaseResult.snippetId)
+        Assertions.assertEquals(emptyList<Any>(), updatedTestCaseResult.inputs)
+        Assertions.assertEquals(emptyList<Any>(), updatedTestCaseResult.expectedOutputs)
+        Assertions.assertEquals(emptyList<Any>(), updatedTestCaseResult.envs)
     }
 }

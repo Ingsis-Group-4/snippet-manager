@@ -22,6 +22,6 @@ class SnippetRunnerApiMock : SnippetRunnerApi {
         ruleConfig: String,
         token: String,
     ): String {
-        TODO("Not yet implemented")
+        return "formatted content"
     }
 }
