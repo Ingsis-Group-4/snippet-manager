@@ -12,7 +12,7 @@ import jakarta.persistence.ManyToOne
 data class SnippetUserStatus(
     val userId: String,
     @Enumerated(EnumType.STRING)
-    val status: SnippetStatus,
+    var status: SnippetStatus,
     @ManyToOne
     @JoinColumn(name = "snippet_id", nullable = false)
     val snippet: Snippet,

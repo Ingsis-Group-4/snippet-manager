@@ -2,7 +2,7 @@ package app.manager.integration.permission
 
 import app.logs.CorrelationIdFilter.Companion.CORRELATION_ID_KEY
 import app.manager.model.dto.PermissionCreateSnippetInput
-import app.manager.model.dto.PermissionsSnippetOutput
+import app.manager.model.dto.PermissionListOutput
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.MDC
 import org.springframework.http.HttpEntity
@@ -27,11 +27,13 @@ class RemoteSnippetPermission(val rest: RestTemplate, val permissionUrl: String,
     override fun getAllSnippetsPermission(
         userId: String,
         token: String,
-    ): ResponseEntity<Array<PermissionsSnippetOutput>> {
-        val getSnippetsUrl: String = "$permissionUrl/all/$userId"
+        pageNum: Int,
+        pageSize: Int,
+    ): ResponseEntity<PermissionListOutput> {
+        val getSnippetsUrl: String = "$permissionUrl/all?page_num=$pageNum&page_size=$pageSize"
         val headers = getJsonHeader(token)
         val entity: HttpEntity<Void> = HttpEntity(headers)
-        return rest.exchange(getSnippetsUrl, HttpMethod.GET, entity, Array<PermissionsSnippetOutput>::class.java)
+        return rest.exchange(getSnippetsUrl, HttpMethod.GET, entity, PermissionListOutput::class.java)
     }
 
     override fun deleteSnippetPermissions(

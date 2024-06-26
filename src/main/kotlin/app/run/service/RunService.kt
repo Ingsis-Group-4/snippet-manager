@@ -24,6 +24,7 @@ class RunService
         fun formatSnippetWithUserRules(
             userId: String,
             snippetContent: SnippetContent,
+            token: String,
         ): String {
             logger.info("Formatting snippet with user rules")
             logger.info("Getting rules for user with id: $userId")
@@ -34,10 +35,11 @@ class RunService
             return runnerApi.formatSnippet(
                 snippetContent.content,
                 ruleJsonString,
+                token = token,
             )
         }
 
-        fun stringifyRules(rules: List<UserRuleOutput>): String {
+        private fun stringifyRules(rules: List<UserRuleOutput>): String {
             logger.info("Stringifying rules")
             val rootNode = objectMapper.createObjectNode()
 

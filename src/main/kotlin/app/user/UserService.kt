@@ -14,4 +14,9 @@ class UserService
             val allUsers = auth0Api.getAllUsers()
             return allUsers.filter { it.user_id != userId }
         }
+
+        fun getUsernameById(userId: String): String {
+            val user: User = auth0Api.getUserById(userId)
+            return user.name
+        }
     }

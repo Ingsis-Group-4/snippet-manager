@@ -1,7 +1,7 @@
 package app.manager.integration.permission
 
 import app.manager.model.dto.PermissionCreateSnippetInput
-import app.manager.model.dto.PermissionsSnippetOutput
+import app.manager.model.dto.PermissionListOutput
 import org.springframework.http.ResponseEntity
 
 interface SnippetPermissonApi {
@@ -13,7 +13,9 @@ interface SnippetPermissonApi {
     fun getAllSnippetsPermission(
         userId: String,
         token: String,
-    ): ResponseEntity<Array<PermissionsSnippetOutput>>
+        pageNum: Int,
+        pageSize: Int,
+    ): ResponseEntity<PermissionListOutput>
 
     fun deleteSnippetPermissions(
         snippetId: String,
