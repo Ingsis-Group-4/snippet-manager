@@ -19,4 +19,4 @@ jobs:
   ci:
     uses: Ingsis-Group-4/common-actions/.github/workflows/ci.yaml@common-ci
     secrets:
-      github_token: ${{ secrets.GITHUB_TOKEN }}
+      my_github_token: ${{ secrets.GITHUB_TOKEN }}
