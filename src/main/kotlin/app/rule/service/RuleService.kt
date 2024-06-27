@@ -49,7 +49,13 @@ class RuleService
             logger.info("Getting rules for user with id: $userId and type: $ruleType")
             val userRules = this.userRuleRepository.findAllByUserIdAndRule_RuleType(userId, ruleType)
 
-            return userRules.map { toUserRuleOutput(it) }
+            return userRules.map {
+                if (it.isActive) {
+                    toUserRuleOutput(it)
+                } else {
+                    toDefaultRuleOutput(it)
+                }
+            }
         }
 
         private fun toUserRuleOutput(userRule: UserRule): UserRuleOutput {
@@ -59,6 +65,18 @@ class RuleService
                 name = userRule.rule.name,
                 isActive = userRule.isActive,
                 value = userRule.value,
+                valueType = userRule.rule.valueType,
+                type = userRule.rule.ruleType,
+            )
+        }
+
+        private fun toDefaultRuleOutput(userRule: UserRule): UserRuleOutput {
+            return UserRuleOutput(
+                id = userRule.id!!,
+                userId = userRule.userId,
+                name = userRule.rule.name,
+                isActive = userRule.isActive,
+                value = userRule.rule.defaultValue,
                 valueType = userRule.rule.valueType,
                 type = userRule.rule.ruleType,
             )
