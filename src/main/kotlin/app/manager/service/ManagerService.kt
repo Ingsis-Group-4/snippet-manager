@@ -225,16 +225,22 @@ class ManagerService
             token: String,
         ): String {
             logger.info("Received request to share snippet with id ${input.snippetId} with user ${input.userId}")
-            snippetRepository.findSnippetById(input.snippetId) ?: {
+            val snippet = snippetRepository.findSnippetById(input.snippetId)
+
+            if (snippet == null) {
                 logger.error("Snippet with id ${input.snippetId} not found")
                 throw SnippetNotFoundException()
             }
+
             val permissionBodyInput =
                 PermissionCreateSnippetInput(
                     snippetId = input.snippetId,
                     userId = input.userId,
                     permissionType = "SHARED",
                 )
+
+            createUserStatusForSnippet(input.userId, snippet)
+
             logger.info("Attempting to create sharing permission for snippet")
             val permissionResponseEntity =
                 snippetPermissionApi.createSnippetPermission(permissionBodyInput, token)
