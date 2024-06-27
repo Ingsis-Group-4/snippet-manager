@@ -12,12 +12,11 @@ on:
     branches: [ "main", "dev", "ci-common-actions" ]
   pull_request:
     branches: [ "main", "dev" ]
+  :
 
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  ci:
     uses: Ingsis-Group-4/common-actions/.github/workflows/ci.yaml@common-ci
     with:
       github_token: ${{ secrets.GITHUB_TOKEN }}
