@@ -1,13 +1,13 @@
 name: "Continuous Deployment to dev"
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
   push:
     branches:
       - dev
 
 jobs:
   push_to_registry:
-    name: Push Docker image to GitHub Packages and Upload it to the server 
+    name: Push Docker image to GitHub Packages and Upload it to the server
     runs-on: ubuntu-latest
     steps:
       - name: Create Short SHA
@@ -35,7 +35,13 @@ jobs:
           tags: |
             ghcr.io/ingsis-group-4/snippet-manager-dev:${{ steps.short-sha.outputs.sha }}
             ghcr.io/ingsis-group-4/snippet-manager-dev:latest
-           
+
+          build-args: |
+            NEW_RELIC_LICENSE_KEY=${{ secrets.NEW_RELIC_LICENSE_KEY }}
+            NEW_RELIC_APP_NAME=${{ secrets.NEW_RELIC_APP_NAME_DEV }}
+            ACTOR=${{ github.repository_owner }}
+            TOKEN=${{ secrets.GITHUB_TOKEN }}
+
       - name: Update server
         uses: appleboy/ssh-action@master
         with:
@@ -45,4 +51,5 @@ jobs:
           script: |
             cd snippet-infra
             docker compose -f docker-compose.dev.yml stop snippet-manager
+            docker compose -f docker-compose.dev.yml pull snippet-manager
             docker compose -f docker-compose.dev.yml up snippet-manager -d --build

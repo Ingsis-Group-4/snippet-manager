@@ -69,7 +69,7 @@ class ManagerServiceTests {
         assert(result.snippets.size == 3)
         assert(result.snippets[0].name == "Snippet 1")
         for (i in result.snippets) {
-            assert(i.author == "get-all-snippets-test-user")
+            assert(i.author == "user")
         }
     }
 

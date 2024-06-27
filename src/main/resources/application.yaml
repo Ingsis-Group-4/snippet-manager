@@ -1,21 +1,44 @@
 auth0:
-  audience: https://snippet-manager
-
+  managing:
+    token: ${AUTH0_MANAGING_TOKEN:pepito}
+  audience: ${AUTH0_AUDIENCE:https://snippet-manager}
 spring:
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://dev-rwvojcsa8mzfij2d.us.auth0.com/
+          issuer-uri: ${AUTH0_ISSUER_URI:https://dev-rwvojcsa8mzfij2d.us.auth0.com/}
+  application:
+    name: snippet-manager
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5433}/${DB_NAME:manager-db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
 
-
+azuriteBucket: ${AZURITE_BUCKET_URL_V1:http://asset_service:8080/v1/asset/snippet}
+permissionsService: ${PERMISSION_SNIPPET_SERVICE_URL:http://permission_service:8081/permission}
+server:
+  port: 4322
+snippet:
+  runner:
+    url: ${SNIPPET_RUNNER_SERVICE_URL:http://snippet-runner:8080}
 redis:
   stream:
-    request_lint_key: ${REDIS_STREAM_REQUEST_LINT_KEY}
-    result_lint_key: ${REDIS_STREAM_RESULT_LINT_KEY}
+    request_lint_key: ${REDIS_STREAM_REQUEST_LINT_KEY:request_lint}
+    result_lint_key: ${REDIS_STREAM_RESULT_LINT_KEY:result_lint}
   groups:
-    lint: ${REDIS_STREAM_GROUP_LINT}
+    lint: ${REDIS_STREAM_GROUP_LINT:lint_group}

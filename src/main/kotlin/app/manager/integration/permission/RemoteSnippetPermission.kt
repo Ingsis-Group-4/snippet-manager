@@ -1,8 +1,10 @@
 package app.manager.integration.permission
 
+import app.logs.CorrelationIdFilter.Companion.CORRELATION_ID_KEY
 import app.manager.model.dto.PermissionCreateSnippetInput
 import app.manager.model.dto.PermissionListOutput
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.MDC
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -60,10 +62,12 @@ class RemoteSnippetPermission(val rest: RestTemplate, val permissionUrl: String,
     }
 
     private fun getJsonHeader(token: String): HttpHeaders {
+        val correlationId = MDC.get(CORRELATION_ID_KEY)
         val headers =
             HttpHeaders().apply {
                 contentType = MediaType.APPLICATION_JSON
                 set("Authorization", "Bearer $token")
+                set("X-Correlation-Id", correlationId)
             }
         return headers
     }

@@ -7,6 +7,7 @@ import app.rule.model.enums.RuleValueType
 import app.rule.service.RuleService
 import app.run.model.dto.SnippetContent
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -18,11 +19,15 @@ class RunService
         private val ruleService: RuleService,
         private val objectMapper: ObjectMapper,
     ) {
+        private val logger = LoggerFactory.getLogger(RunService::class.java)
+
         fun formatSnippetWithUserRules(
             userId: String,
             snippetContent: SnippetContent,
             token: String,
         ): String {
+            logger.info("Formatting snippet with user rules")
+            logger.info("Getting rules for user with id: $userId")
             val formatRules = ruleService.getRulesForUserByType(userId, RuleType.FORMATTING)
 
             val ruleJsonString = stringifyRules(formatRules)
@@ -35,6 +40,7 @@ class RunService
         }
 
         private fun stringifyRules(rules: List<UserRuleOutput>): String {
+            logger.info("Stringifying rules")
             val rootNode = objectMapper.createObjectNode()
 
             for (rule in rules) {
