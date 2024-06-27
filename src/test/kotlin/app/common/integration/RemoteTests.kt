@@ -58,7 +58,6 @@ class RemoteTests {
         val input = PermissionCreateSnippetInput("1", "2", "3")
         assertThrows<Exception> { remotePermissionService.createSnippetPermission(input, "token") }
         assertThrows<Exception> { remotePermissionService.getAllSnippetsPermission("1", "1", 2, 3) }
-        assertThrows<Exception> { remotePermissionService.getAuthorBySnippetId("1","token") }
-
+        assertThrows<Exception> { remotePermissionService.getAuthorBySnippetId("1", "token") }
     }
 }
