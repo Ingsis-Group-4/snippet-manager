@@ -171,59 +171,53 @@ class ManagerService
             pageSize: Int,
         ): SnippetListOutput {
             logger.info("Received request to get snippets for user $userId")
-            logger.info("Attempting to get snippets from permission service")
-            val permissionResponseEntity =
-                snippetPermissionApi.getAllSnippetsPermission(userId, token, pageNum, pageSize)
+            val permissionResponseEntity = snippetPermissionApi.getAllSnippetsPermission(userId, token, pageNum, pageSize)
 
-            if (permissionResponseEntity.statusCode.is2xxSuccessful) {
-                logger.info("Snippets retrieved successfully from permissions service")
-                val snippets: MutableList<GetSnippetWithStatusOutput> = mutableListOf()
-                for (permissionSnippet in permissionResponseEntity.body!!.permissions) {
-                    val snippetId = permissionSnippet.snippetId
-                    val snippetAuthor = permissionSnippet.authorId
-                    val snippet = snippetRepository.findSnippetById(snippetId)
-                    if (snippet == null) {
-                        logger.error("Snippet with id $snippetId not found")
-                        throw SnippetNotFoundException()
-                    }
-                    logger.info("Attempting to get snippet content for snippet $snippetId from bucket")
-                    val contentResponse =
-                        assetStoreApi.getSnippet(snippet.snippetKey)
-                    if (!contentResponse.statusCode.is2xxSuccessful) {
-                        logger.error("Failed to get snippet content for snippet $snippetId. Status code: ${contentResponse.statusCode}")
-                        throw Exception("Failed to get snippet content for snippet $snippetId. Status code: ${contentResponse.statusCode}")
-                    }
-
-                    val snippetStatus =
-                        snippetUserStatusRepository.findByUserIdAndSnippet_Id(
-                            userId,
-                            snippet.id!!,
-                        )
-                    if (snippetStatus == null) {
-                        logger.error("Snippet status for user not found")
-                        throw Exception("Snippet status for user not found")
-                    }
-                    val content = contentResponse.body!!
-                    val snippetOutput =
-                        GetSnippetWithStatusOutput(
-                            id = snippet.id,
-                            name = snippet.name,
-                            language = snippet.language,
-                            author = snippetAuthor,
-                            content = content,
-                            status = snippetStatus.status,
-                        )
-                    logger.info("Adding snippet to list")
-                    snippets.add(snippetOutput)
-                }
-                logger.info("Returning snippet list output")
-                return SnippetListOutput(snippets, permissionResponseEntity.body!!.count)
-            } else {
+            if (!permissionResponseEntity.statusCode.is2xxSuccessful) {
                 logger.error(
-                    "Failed to get snippets for user $userId from permissions service. Status code: ${permissionResponseEntity.statusCode}",
+                    "Failed to get snippets for user $userId from permission service. Status code: ${permissionResponseEntity.statusCode}",
                 )
                 throw Exception("Failed to get snippets for user $userId.")
             }
+            logger.info("Successfully retrieved snippets for user $userId from permission service")
+            val snippets =
+                permissionResponseEntity.body!!.permissions.map { permissionSnippet ->
+                    val snippet =
+                        snippetRepository.findSnippetById(permissionSnippet.snippetId)
+                    if (snippet == null) {
+                        logger.error("Snippet with id ${permissionSnippet.snippetId} not found")
+                        throw SnippetNotFoundException()
+                    }
+                    val contentResponse = assetStoreApi.getSnippet(snippet.snippetKey)
+
+                    if (!contentResponse.statusCode.is2xxSuccessful) {
+                        logger.error(
+                            "Failed to get snippet content for snippet ${permissionSnippet.snippetId} " +
+                                "from asset service. Status code: ${contentResponse.statusCode}",
+                        )
+                        throw Exception(
+                            "Failed to get snippet content for snippet ${permissionSnippet.snippetId}. " +
+                                "Status code: ${contentResponse.statusCode}",
+                        )
+                    }
+
+                    val snippetStatus = snippetUserStatusRepository.findByUserIdAndSnippet_Id(userId, snippet.id!!)
+                    if (snippetStatus == null) {
+                        logger.error("Snippet status for $userId not found")
+                        throw Exception("Snippet status for user not found")
+                    }
+
+                    GetSnippetWithStatusOutput(
+                        id = snippet.id,
+                        name = snippet.name,
+                        language = snippet.language,
+                        author = getUsernameFromUserId(permissionSnippet.authorId),
+                        content = contentResponse.body!!,
+                        status = snippetStatus.status,
+                    )
+                }.toMutableList()
+
+            return SnippetListOutput(snippets, permissionResponseEntity.body!!.count)
         }
 
         fun shareSnippet(
@@ -231,16 +225,22 @@ class ManagerService
             token: String,
         ): String {
             logger.info("Received request to share snippet with id ${input.snippetId} with user ${input.userId}")
-            snippetRepository.findSnippetById(input.snippetId) ?: {
+            val snippet = snippetRepository.findSnippetById(input.snippetId)
+
+            if (snippet == null) {
                 logger.error("Snippet with id ${input.snippetId} not found")
                 throw SnippetNotFoundException()
             }
+
             val permissionBodyInput =
                 PermissionCreateSnippetInput(
                     snippetId = input.snippetId,
                     userId = input.userId,
                     permissionType = "SHARED",
                 )
+
+            createUserStatusForSnippet(input.userId, snippet)
+
             logger.info("Attempting to create sharing permission for snippet")
             val permissionResponseEntity =
                 snippetPermissionApi.createSnippetPermission(permissionBodyInput, token)
